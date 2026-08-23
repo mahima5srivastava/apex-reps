@@ -1,7 +1,7 @@
 import type { PhotoAngle } from '@/types'
 
 export const PROGRESS_PHOTOS_BUCKET = 'progress_photos'
-export const ALLOWED_IMAGE_TYPES: string[] = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+export const ALLOWED_IMAGE_TYPES: string[] = ['image/jpeg', 'image/png']
 
 export function buildPhotoStoragePath(
   userId: string,

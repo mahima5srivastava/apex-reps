@@ -49,7 +49,7 @@ import type { PhotoAngle } from '@/types'
 import { ALLOWED_IMAGE_TYPES } from '@/utils/constants'
 
 const measurements = [
-  { label: 'Weight (Kg)', name: 'weight' as const },
+  { label: 'Weight (kg)', name: 'weight' as const },
   { label: 'Waist (inch)', name: 'waist' as const },
   { label: 'Neck (inch)', name: 'neck' as const },
   { label: 'Hip (inch)', name: 'hip' as const }
@@ -68,7 +68,7 @@ const statsStore = useStatsStore()
 const imageFile = z
   .custom<File>(
     val => val instanceof File && ALLOWED_IMAGE_TYPES.includes(val.type),
-    'Must be a valid image file (JPEG, PNG, GIF, or WebP)'
+    'Must be a valid image file (JPEG or PNG)'
   )
   .refine(file => file.size <= 10 * 1024 * 1024, 'Image must be 10MB or smaller')
 

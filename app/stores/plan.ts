@@ -20,11 +20,9 @@ export const usePlanStore = defineStore('plan', {
 
         if (error) throw error
 
-        if (data) {
-          this.id = data.id
-          this.name = data.name
-          this.duration = data.duration
-        }
+        this.id = data?.id ?? ''
+        this.name = data?.name ?? ''
+        this.duration = data?.duration ?? 0
       } catch (error) {
         console.log('Error fetching plan: ', error)
         throw error

@@ -21,12 +21,10 @@ export const useSubStore = defineStore('sub', {
 
         if (error) throw error
 
-        if (data) {
-          this.id = data.id
-          this.planId = data.plan_id
-          this.startDate = data.start_date
-          this.endDate = data.end_date
-        }
+        this.id = data?.id ?? ''
+        this.planId = data?.plan_id ?? ''
+        this.startDate = data?.start_date ?? ''
+        this.endDate = data?.end_date ?? ''
       } catch (error) {
         console.log('Error fetching active subscription: ', error)
         throw error

@@ -17,28 +17,109 @@ interface PhotoInput {
   file: File
 }
 
+interface StatRecord {
+  id: string
+  user_id: string
+  weight: number
+  waist: number
+  hip: number
+  neck: number
+  bfp: number
+  created_at: string
+}
+
+const dateFormatter = new Intl.DateTimeFormat(undefined, {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric'
+})
+
+const formatChartDate = (iso: string) => dateFormatter.format(new Date(iso))
+
 export const useStatsStore = defineStore('stats', {
-  state: () => ({}),
-  getters: {},
+  state: () => ({
+    stats: [] as StatRecord[]
+  }),
+  getters: {
+    weightChartData: state =>
+      [...state.stats]
+        .sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        )
+        .map(s => ({ date: formatChartDate(s.created_at), value: s.weight })),
+
+    waistChartData: state =>
+      [...state.stats]
+        .sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        )
+        .map(s => ({ date: formatChartDate(s.created_at), value: s.waist })),
+
+    bfpChartData: state =>
+      [...state.stats]
+        .sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        )
+        .map(s => ({ date: formatChartDate(s.created_at), value: s.bfp }))
+  },
   actions: {
-    async saveStatsAndPhotos(stats: Stats, photos: PhotoInput[] = []) {
+    async fetchAllStats() {
       try {
         const profileStore = useProfileStore()
         if (!profileStore.id) {
           await profileStore.fetchProfile()
         }
         if (!profileStore.id) {
-          throw new Error('Profile not found. Please complete your profile before checking in.')
+          throw new Error('Profile not found.')
         }
 
-        const statId = await this.insertStat(profileStore.id, stats, profileStore)
-        await this.savePhotos(profileStore.id, statId, photos)
+        const { data, error } = await getSupabase()
+          .from('stats')
+          .select('id, user_id, weight, waist, hip, neck, bfp, created_at')
+          .eq('user_id', profileStore.id)
+          .order('created_at', { ascending: true })
 
-        return statId
+        if (error) throw new Error(error.message)
+
+        this.stats = data as StatRecord[]
+        return this.stats
       } catch (error) {
-        console.error('Error saving stats:', error)
+        console.error('Error fetching stats:', error)
         throw error
       }
+    },
+
+    async saveStatsAndPhotos(stats: Stats, photos: PhotoInput[] = []) {
+      const profileStore = useProfileStore()
+      if (!profileStore.id) {
+        await profileStore.fetchProfile()
+      }
+      if (!profileStore.id) {
+        throw new Error('Profile not found. Please complete your profile before checking in.')
+      }
+
+      if (!photos.some(p => p.angle === 'left')) {
+        throw new Error('A left progress photo is required.')
+      }
+
+      const statId = await this.insertStat(profileStore.id, stats, profileStore)
+
+      const uploadedPaths: string[] = []
+      try {
+        for (const photo of photos) {
+          const path = await this.uploadPhoto(profileStore.id, statId, photo)
+          uploadedPaths.push(path)
+          await this.insertPhotoRecord(profileStore.id, statId, photo.angle, path)
+        }
+      } catch (error) {
+        await this.rollbackStat(profileStore.id, statId, uploadedPaths)
+        throw error
+      }
+
+      return statId
     },
 
     async insertStat(userId: string, stats: Stats, profileStore: ReturnType<typeof useProfileStore>) {
@@ -59,13 +140,6 @@ export const useStatsStore = defineStore('stats', {
 
       if (error) throw new Error(error.message)
       return data.id
-    },
-
-    async savePhotos(userId: string, statId: string, photos: PhotoInput[]) {
-      for (const photo of photos) {
-        const path = await this.uploadPhoto(userId, statId, photo)
-        await this.insertPhotoRecord(userId, statId, photo.angle, path)
-      }
     },
 
     async uploadPhoto(userId: string, statId: string, photo: PhotoInput) {
@@ -89,6 +163,21 @@ export const useStatsStore = defineStore('stats', {
           angle,
           filename
         })
+
+      if (error) throw new Error(error.message)
+    },
+
+    async rollbackStat(userId: string, statId: string, uploadedPaths: string[]) {
+      const supabase = getSupabase()
+      if (uploadedPaths.length) {
+        await supabase.storage
+          .from(PROGRESS_PHOTOS_BUCKET)
+          .remove(uploadedPaths)
+      }
+      const { error } = await supabase
+        .from('stats')
+        .delete()
+        .eq('id', statId)
 
       if (error) throw new Error(error.message)
     }

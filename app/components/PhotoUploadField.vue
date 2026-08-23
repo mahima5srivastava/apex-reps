@@ -24,7 +24,7 @@ const onFileChange = (event: Event) => {
   >
     <UInput
       type="file"
-      accept="image/*"
+      accept="image/jpeg,image/png"
       @change="onFileChange"
     />
   </UFormField>
