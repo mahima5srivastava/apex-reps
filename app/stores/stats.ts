@@ -38,7 +38,8 @@ const formatChartDate = (iso: string) => dateFormatter.format(new Date(iso))
 
 export const useStatsStore = defineStore('stats', {
   state: () => ({
-    stats: [] as StatRecord[]
+    stats: [] as StatRecord[],
+    leftPhotoCheckins: [] as { statId: string, createdAt: string, url: string }[]
   }),
   getters: {
     weightChartData: state =>
@@ -88,6 +89,57 @@ export const useStatsStore = defineStore('stats', {
         return this.stats
       } catch (error) {
         console.error('Error fetching stats:', error)
+        throw error
+      }
+    },
+
+    async fetchLeftPhotos() {
+      try {
+        const profileStore = useProfileStore()
+        if (!profileStore.id) {
+          await profileStore.fetchProfile()
+        }
+        if (!profileStore.id) {
+          throw new Error('Profile not found.')
+        }
+
+        const { data, error } = await getSupabase()
+          .from('photos')
+          .select('filename, stat_id, created_at')
+          .eq('user_id', profileStore.id)
+          .eq('angle', 'left')
+          .order('created_at', { ascending: true })
+
+        if (error) throw new Error(error.message)
+
+        const seen = new Set<string>()
+        const rows = (data ?? []).filter((row) => {
+          if (seen.has(row.stat_id)) return false
+          seen.add(row.stat_id)
+          return true
+        })
+
+        const checkins = await Promise.all(
+          rows.map(async (row) => {
+            const { data: signed, error: urlError } = await getSupabase()
+              .storage
+              .from(PROGRESS_PHOTOS_BUCKET)
+              .createSignedUrl(row.filename, 60 * 60 * 24 * 7)
+
+            if (urlError) throw new Error(urlError.message)
+
+            return {
+              statId: row.stat_id,
+              createdAt: row.created_at,
+              url: signed?.signedUrl ?? ''
+            }
+          })
+        )
+
+        this.leftPhotoCheckins = checkins
+        return this.leftPhotoCheckins
+      } catch (error) {
+        console.error('Error fetching left photos:', error)
         throw error
       }
     },

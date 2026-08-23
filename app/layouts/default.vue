@@ -24,8 +24,8 @@ const logout = async () => {
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col">
-    <UHeader>
+  <div class="flex min-h-screen flex-col overflow-x-hidden">
+    <UHeader :toggle="false">
       <template #left>
         <NuxtLink
           to="/"

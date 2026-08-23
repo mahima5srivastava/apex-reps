@@ -52,20 +52,24 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
 
 <template>
   <div class="grid min-h-screen lg:grid-cols-2">
-    <div class="relative hidden flex-col justify-between bg-gradient-to-br from-primary to-primary/70 p-12 text-primary-invert lg:flex">
-      <AppLogo class="w-auto h-12 shrink-0 brightness-0 invert" />
-      <div class="space-y-4">
-        <h1 class="text-3xl font-bold leading-tight">
-          Track your transformation, one check-in at a time.
-        </h1>
-        <p class="text-primary-invert/80 max-w-md">
-          Log your measurements and progress photos to stay accountable and see
-          real, visible results on your fitness journey.
+    <div class="relative hidden overflow-hidden p-12 lg:flex">
+      <div class="absolute inset-0 bg-gradient-to-br from-primary to-primary-700" />
+      <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/50" />
+      <div class="relative z-10 flex h-full w-full flex-col justify-between text-white">
+        <AppLogo class="w-auto h-12 shrink-0 brightness-0 invert" />
+        <div class="space-y-4">
+          <h1 class="text-3xl font-bold leading-tight">
+            Track your transformation, one check-in at a time.
+          </h1>
+          <p class="max-w-md">
+            Log your measurements and progress photos to stay accountable and see
+            real, visible results on your fitness journey.
+          </p>
+        </div>
+        <p class="text-sm">
+          &copy; {{ new Date().getFullYear() }} Mahima Srivastava. All rights reserved.
         </p>
       </div>
-      <p class="text-sm text-primary-invert/70">
-        &copy; {{ new Date().getFullYear() }} Apex Reps. All rights reserved.
-      </p>
     </div>
 
     <div class="flex flex-col items-center justify-center gap-6 p-4">

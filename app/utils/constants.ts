@@ -9,5 +9,5 @@ export function buildPhotoStoragePath(
   angle: PhotoAngle,
   extension: string
 ): string {
-  return `${userId}/${statId}/${angle}.${extension}`
+  return `${userId}_${statId}_${angle}.${extension}`
 }

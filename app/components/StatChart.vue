@@ -39,7 +39,7 @@ const xFormatter = (tick: number, _i?: number, _ticks?: number[]): string => {
 
 <template>
   <div
-    class="mx-auto max-w-3xl space-y-6 rounded-lg"
+    class="mx-auto max-w-3xl w-full min-w-0 max-w-full space-y-6 overflow-hidden rounded-lg"
     :class="showTitle ? 'p-6' : ''"
   >
     <div class="flex items-center justify-between">

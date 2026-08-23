@@ -50,6 +50,7 @@
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <StatChart
+            class="min-w-0"
             title="Weight"
             :chart-data="statsStore.weightChartData"
             value-key="value"
@@ -58,6 +59,7 @@
             y-label="Weight (kg)"
           />
           <StatChart
+            class="min-w-0"
             title="Waist"
             :chart-data="statsStore.waistChartData"
             value-key="value"
@@ -66,6 +68,7 @@
             y-label="Waist (in)"
           />
           <StatChart
+            class="min-w-0"
             title="Body Fat %"
             :chart-data="statsStore.bfpChartData"
             value-key="value"
@@ -74,9 +77,12 @@
             y-label="Body Fat (%)"
           />
         </div>
+        <div>
+          <ProgressPhotoCompare />
+        </div>
       </div>
     </div>
-  </UContainer>
+  </ucontainer>
 </template>
 
 <script setup lang="ts">
@@ -85,6 +91,7 @@ import { useSubStore } from '@/stores/subscription'
 import { usePlanStore } from '@/stores/plan'
 import { useStatsStore } from '@/stores/stats'
 import { computed } from 'vue'
+import ProgressPhotoCompare from '@/components/ProgressPhotoCompare.vue'
 
 const profileStore = useProfileStore()
 const subStore = useSubStore()
@@ -121,6 +128,7 @@ onMounted(async () => {
       await planStore.fetchPlan(subStore.planId)
     }
     await statsStore.fetchAllStats()
+    await statsStore.fetchLeftPhotos()
   } catch (error) {
     console.log('Error loading dashboard: ', error)
   } finally {
