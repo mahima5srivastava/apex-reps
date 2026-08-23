@@ -119,6 +119,17 @@ export const useStatsStore = defineStore('stats', {
           return true
         })
 
+        const { data: statRows, error: statError } = await getSupabase()
+          .from('stats')
+          .select('id, created_at')
+          .in('id', rows.map(r => r.stat_id))
+
+        if (statError) throw new Error(statError.message)
+
+        const statCreatedAtById = new Map(
+          (statRows ?? []).map(s => [s.id, s.created_at])
+        )
+
         const checkins = await Promise.all(
           rows.map(async (row) => {
             const { data: signed, error: urlError } = await getSupabase()
@@ -130,7 +141,7 @@ export const useStatsStore = defineStore('stats', {
 
             return {
               statId: row.stat_id,
-              createdAt: row.created_at,
+              createdAt: statCreatedAtById.get(row.stat_id) ?? row.created_at,
               url: signed?.signedUrl ?? ''
             }
           })
