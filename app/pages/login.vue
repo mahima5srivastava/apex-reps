@@ -51,18 +51,36 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center gap-4 p-4">
-    <AppLogo class="w-auto h-12 shrink-0 mb-4 mt-16" />
-    <UPageCard class="w-full max-w-md">
-      <UAuthForm
-        :schema="schema"
-        title="Login"
-        description="Enter your credentials to access your account."
-        icon="i-lucide-user"
-        :fields="fields"
-        :loading="isLoading"
-        @submit="onSubmit"
-      />
-    </UPageCard>
+  <div class="grid min-h-screen lg:grid-cols-2">
+    <div class="relative hidden flex-col justify-between bg-gradient-to-br from-primary to-primary/70 p-12 text-primary-invert lg:flex">
+      <AppLogo class="w-auto h-12 shrink-0 brightness-0 invert" />
+      <div class="space-y-4">
+        <h1 class="text-3xl font-bold leading-tight">
+          Track your transformation, one check-in at a time.
+        </h1>
+        <p class="text-primary-invert/80 max-w-md">
+          Log your measurements and progress photos to stay accountable and see
+          real, visible results on your fitness journey.
+        </p>
+      </div>
+      <p class="text-sm text-primary-invert/70">
+        &copy; {{ new Date().getFullYear() }} Apex Reps. All rights reserved.
+      </p>
+    </div>
+
+    <div class="flex flex-col items-center justify-center gap-6 p-4">
+      <AppLogo class="w-auto h-10 shrink-0 lg:hidden" />
+      <UPageCard class="w-full max-w-md">
+        <UAuthForm
+          :schema="schema"
+          title="Login"
+          description="Enter your credentials to access your account."
+          icon="i-lucide-user"
+          :fields="fields"
+          :loading="isLoading"
+          @submit="onSubmit"
+        />
+      </UPageCard>
+    </div>
   </div>
 </template>

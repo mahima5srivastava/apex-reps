@@ -1,42 +1,71 @@
 <template>
-  <UContainer class="pb-4">
-    <h2 class="text-2xl font-bold my-4">
-      Check-In Form
-    </h2>
+  <UContainer class="pb-8 max-w-3xl">
+    <div class="my-6">
+      <h2 class="text-2xl font-bold">
+        Check-In
+      </h2>
+      <p class="text-muted mt-1">
+        Log your latest measurements and progress photos to track your transformation.
+      </p>
+    </div>
+
     <UForm
       :schema="schema"
       :state="state"
-      class="flex flex-col gap-4 items-start"
+      class="flex flex-col gap-6"
       @submit="handleSubmit"
     >
-      <UFormField
-        v-for="measurement in measurements"
-        :key="measurement.name"
-        :label="measurement.label"
-        :name="measurement.name"
-        required
-      >
-        <UInput
-          v-model="state[measurement.name]"
-          type="number"
-          :min="0"
-          :step="0.1"
-        />
-      </UFormField>
-      <PhotoUploadField
-        v-for="photo in photoFields"
-        :key="photo.name"
-        v-model="state[photo.stateKey]"
-        :label="photo.label"
-        :name="photo.name"
-        :required="photo.required"
-      />
-      <UButton
-        type="submit"
-        :loading="isLoading"
-      >
-        Submit
-      </UButton>
+      <UCard variant="subtle">
+        <template #header>
+          <h3 class="text-lg font-semibold">
+            Body Measurements
+          </h3>
+        </template>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <UFormField
+            v-for="measurement in measurements"
+            :key="measurement.name"
+            :label="measurement.label"
+            :name="measurement.name"
+            required
+          >
+            <UInput
+              v-model="state[measurement.name]"
+              type="number"
+              :min="0"
+              :step="0.1"
+            />
+          </UFormField>
+        </div>
+      </UCard>
+
+      <UCard variant="subtle">
+        <template #header>
+          <h3 class="text-lg font-semibold">
+            Progress Photos
+          </h3>
+        </template>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <PhotoUploadField
+            v-for="photo in photoFields"
+            :key="photo.name"
+            v-model="state[photo.stateKey]"
+            :label="photo.label"
+            :name="photo.name"
+            :required="photo.required"
+          />
+        </div>
+      </UCard>
+
+      <div class="flex justify-end">
+        <UButton
+          type="submit"
+          :loading="isLoading"
+          size="lg"
+        >
+          Submit Check-In
+        </UButton>
+      </div>
     </UForm>
   </UContainer>
 </template>

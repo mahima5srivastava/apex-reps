@@ -63,7 +63,7 @@ export const useStatsStore = defineStore('stats', {
           (a, b) =>
             new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
         )
-        .map(s => ({ date: formatChartDate(s.created_at), value: s.bfp }))
+        .map(s => ({ date: formatChartDate(s.created_at), value: Math.round(s.bfp * 10) / 10 }))
   },
   actions: {
     async fetchAllStats() {

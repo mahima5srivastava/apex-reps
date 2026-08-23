@@ -1,19 +1,47 @@
-@import url('https://fonts.googleapis.com/css2?family=Gotu&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Jaini&family=Rozha+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "@nuxt/ui";
 
 @theme static {
-  --font-sans: inter, sans-serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
-  --color-green-50: #EFFDF5;
-  --color-green-100: #D9FBE8;
-  --color-green-200: #B3F5D1;
-  --color-green-300: #75EDAE;
-  --color-green-400: #00DC82;
-  --color-green-500: #00C16A;
-  --color-green-600: #00A155;
-  --color-green-700: #007F45;
-  --color-green-800: #016538;
-  --color-green-900: #0A5331;
-  --color-green-950: #052E16;
+  --color-brand-50: #E6F7F8;
+  --color-brand-100: #CCEEF0;
+  --color-brand-200: #99DDE1;
+  --color-brand-300: #66CBCF;
+  --color-brand-400: #339BA1;
+  --color-brand-500: #008E99;
+  --color-brand-600: #007A85;
+  --color-brand-700: #005F68;
+  --color-brand-800: #003D43;
+  --color-brand-900: #001F24;
+  --color-brand-950: #000F08;
+
+  --color-sand-50: #FBF7F4;
+  --color-sand-100: #F5ECE7;
+  --color-sand-200: #EAD9D0;
+  --color-sand-300: #D9C3B8;
+  --color-sand-400: #B5705A;
+  --color-sand-500: #8A5A47;
+  --color-sand-600: #673E2A;
+  --color-sand-700: #4E2E1F;
+  --color-sand-800: #351E14;
+  --color-sand-900: #1C100A;
+  --color-sand-950: #0A0603;
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    border-radius: 0 !important;
+  }
+
+  body {
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+  }
 }
