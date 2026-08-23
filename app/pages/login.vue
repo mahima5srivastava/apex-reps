@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent, AuthFormField } from '@nuxt/ui'
-import {useAuthStore} from '@/stores/auth'
+import { useAuthStore } from '@/stores/auth'
 
 definePageMeta({
-    layout: false
+  layout: false
 })
 
-const isLoading = ref(false);
-const toast = useToast();
+const isLoading = ref(false)
+const toast = useToast()
 
 const fields: AuthFormField[] = [{
   name: 'email',
@@ -36,17 +36,17 @@ const schema = z.object({
 type Schema = z.output<typeof schema>
 
 async function onSubmit(payload: FormSubmitEvent<Schema>) {
-  isLoading.value = true;
+  isLoading.value = true
   const authStore = useAuthStore()
   try {
     await authStore.login(payload.data.email, payload.data.password)
   } catch (error) {
     toast.add({
-      title: error.message,
-      color: "error"
+      title: error instanceof Error ? error.message : 'An error occurred',
+      color: 'error'
     })
   }
-  isLoading.value = false;
+  isLoading.value = false
 }
 </script>
 
@@ -60,10 +60,9 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
         description="Enter your credentials to access your account."
         icon="i-lucide-user"
         :fields="fields"
-        @submit="onSubmit"
         :loading="isLoading"
+        @submit="onSubmit"
       />
     </UPageCard>
   </div>
 </template>
-

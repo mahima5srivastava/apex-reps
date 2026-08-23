@@ -1,6 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Gotu&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Jaini&family=Rozha+One&display=swap');
 @import "tailwindcss";
 @import "@nuxt/ui";
-@import url('https://fonts.googleapis.com/css2?family=Gotu&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Jaini&family=Rozha+One&display=swap');
 
 @theme static {
   --font-sans: inter, sans-serif;

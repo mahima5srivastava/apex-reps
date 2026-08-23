@@ -12,6 +12,13 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  runtimeConfig: {
+    public: {
+      supabaseUrl: import.meta.env.SUPABASE_URL,
+      supabaseKey: import.meta.env.SUPABASE_KEY
+    }
+  },
+
   routeRules: {
     // Removed prerender to allow auth middleware to run client-side
   },
@@ -24,13 +31,6 @@ export default defineNuxtConfig({
         commaDangle: 'never',
         braceStyle: '1tbs'
       }
-    }
-  },
-
-  runtimeConfig: {
-    public: {
-      supabaseUrl: import.meta.env.SUPABASE_URL,
-      supabaseKey: import.meta.env.SUPABASE_KEY
     }
   }
 })

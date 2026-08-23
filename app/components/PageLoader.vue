@@ -1,8 +1,7 @@
 <template>
-    <div class="h-screen w-screen flex justify-center items-center fixed z-50 bg-black/50 top-0 left-0">
-        <span class="loader"></span>
-    </div>
-
+  <div class="h-screen w-screen flex justify-center items-center fixed z-50 bg-black/50 top-0 left-0">
+    <span class="loader" />
+  </div>
 </template>
 
 <style lang="css" scoped>

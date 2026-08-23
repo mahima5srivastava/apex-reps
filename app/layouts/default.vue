@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {useAuthStore} from '~/stores/auth'
+import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
 const isLoading = ref(false)
@@ -24,7 +24,6 @@ const logout = async () => {
 </script>
 
 <template>
-  <UApp>
     <UHeader>
       <template #left>
         <NuxtLink
@@ -36,7 +35,12 @@ const logout = async () => {
       </template>
 
       <template #right>
-        <UButton @click="logout" :loading="isLoading">Logout</UButton>
+        <UButton
+          :loading="isLoading"
+          @click="logout"
+        >
+          Logout
+        </UButton>
       </template>
     </UHeader>
 
@@ -47,9 +51,8 @@ const logout = async () => {
     <USeparator />
 
     <UFooter>
-        <p class="text-sm text-muted">
-            &copy; {{ new Date().getFullYear() }} Mahima Srivastava. All rights reserved.
-        </p>
+      <p class="text-sm text-muted">
+        &copy; {{ new Date().getFullYear() }} Mahima Srivastava. All rights reserved.
+      </p>
     </UFooter>
-  </UApp>
 </template>
