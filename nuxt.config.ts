@@ -19,10 +19,6 @@ export default defineNuxtConfig({
     }
   },
 
-  routeRules: {
-    // Removed prerender to allow auth middleware to run client-side
-  },
-
   compatibilityDate: '2026-06-30',
 
   eslint: {

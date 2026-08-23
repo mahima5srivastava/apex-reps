@@ -1,11 +1,13 @@
-import { useAuthStore } from '@/stores/auth'
+import { getSupabase } from '@/utils/supabase'
 
-export default defineNuxtRouteMiddleware((to) => {
+export default defineNuxtRouteMiddleware(async (to) => {
   if (import.meta.server) {
     return
   }
-  const authStore = useAuthStore()
-  if (to.path !== '/login' && !authStore.isAuthenticated) {
+
+  const { data: { user } } = await getSupabase().auth.getUser()
+
+  if (to.path !== '/login' && !user) {
     return navigateTo('/login')
   }
 })

@@ -2,42 +2,35 @@ import { defineStore } from 'pinia'
 import { getSupabase } from '@/utils/supabase'
 
 export const useAuthStore = defineStore('auth', {
+  state: () => ({
+    isAuthenticated: false,
+    userId: ''
+  }),
   getters: {
-    isAuthenticated: () => {
-      if (import.meta.client) {
-        return localStorage.getItem('ar-is-logged-in') === 'true'
-      }
-      return false
-    }
+    isLoggedIn: state => state.isAuthenticated
   },
   actions: {
+    async fetchSession() {
+      const supabase = getSupabase()
+      const { data: { user } } = await supabase.auth.getUser()
+      this.isAuthenticated = !!user
+      this.userId = user?.id ?? ''
+      return user
+    },
     async login(email: string, password: string) {
       const supabase = getSupabase()
-      try {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
-        if (import.meta.client) {
-          localStorage.setItem('ar-is-logged-in', 'true')
-        }
-        return navigateTo('/')
-      } catch (error) {
-        console.error('Login error:', error)
-        throw error
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
+      await this.fetchSession()
+      return navigateTo('/')
     },
     async logout() {
       const supabase = getSupabase()
-      try {
-        const { error } = await supabase.auth.signOut()
-        if (error) throw error
-        if (import.meta.client) {
-          localStorage.removeItem('ar-is-logged-in')
-        }
-        return navigateTo('/login')
-      } catch (error) {
-        console.error('Logout error:', error)
-        throw error
-      }
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      this.isAuthenticated = false
+      this.userId = ''
+      return navigateTo('/login')
     }
   }
 })

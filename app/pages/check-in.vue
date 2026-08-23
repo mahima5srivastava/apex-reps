@@ -46,15 +46,14 @@
         />
       </UFormField>
       <UFormField
-        label="Body Fat Percentage"
-        name="bfp"
+        label="Hip (inch)"
+        name="hip"
         required
       >
         <UInput
-          v-model="state.bfp"
+          v-model="state.hip"
           type="number"
           :min="0"
-          :max="100"
           :step="0.1"
         />
       </UFormField>
@@ -99,7 +98,7 @@
           @change="state.photoRight = ($event.target as HTMLInputElement)?.files?.[0] ?? null"
         />
       </UFormField>
-      <UButton type="submit">
+      <UButton type="submit" :loading="isLoading">
         Submit
       </UButton>
     </UForm>
@@ -109,10 +108,12 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
+import { useStatsStore } from '@/stores/stats'
+import type { PhotoAngle } from '@/types'
+import { ALLOWED_IMAGE_TYPES } from '@/utils/constants'
 
 const toast = useToast()
-
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+const statsStore = useStatsStore()
 
 const imageFile = z
   .custom<File>(
@@ -125,10 +126,7 @@ const schema = z.object({
   weight: z.coerce.number().positive('Weight must be greater than 0'),
   waist: z.coerce.number().positive('Waist must be greater than 0'),
   neck: z.coerce.number().positive('Neck must be greater than 0'),
-  bfp: z.coerce
-    .number()
-    .min(0, 'Body Fat Percentage must be between 0 and 100')
-    .max(100, 'Body Fat Percentage must be between 0 and 100'),
+  hip: z.coerce.number().positive('Hip must be greater than 0'),
   photoLeft: imageFile,
   photoFront: z.union([z.null(), imageFile]).optional(),
   photoBack: z.union([z.null(), imageFile]).optional(),
@@ -141,7 +139,7 @@ const state = reactive<{
   weight: string
   waist: string
   neck: string
-  bfp: string
+  hip: string
   photoLeft: File | undefined
   photoFront: File | null
   photoBack: File | null
@@ -150,22 +148,58 @@ const state = reactive<{
   weight: '',
   waist: '',
   neck: '',
-  bfp: '',
+  hip: '',
   photoLeft: undefined,
   photoFront: null,
   photoBack: null,
   photoRight: null
 })
 
+const isLoading = ref(false);
+
+const buildPhotoPayload = (): { angle: PhotoAngle, file: File }[] => {
+  const photos: { angle: PhotoAngle, file: File }[] = []
+  if (state.photoLeft) photos.push({ angle: 'left', file: state.photoLeft })
+  if (state.photoFront) photos.push({ angle: 'front', file: state.photoFront })
+  if (state.photoBack) photos.push({ angle: 'back', file: state.photoBack })
+  if (state.photoRight) photos.push({ angle: 'right', file: state.photoRight })
+  return photos
+}
+
+const resetForm = () => {
+  state.weight = ''
+  state.waist = ''
+  state.neck = ''
+  state.hip = ''
+  state.photoLeft = undefined
+  state.photoFront = null
+  state.photoBack = null
+  state.photoRight = null
+}
+
 const handleSubmit = async (event: FormSubmitEvent<Schema>) => {
+  isLoading.value = true;
   try {
-    // Handle form submission logic here
-    console.log('Form submitted:', event.data)
+    const photos = buildPhotoPayload()
+    const stats = {
+      waist: event.data.waist,
+      weight: event.data.weight,
+      hip: event.data.hip,
+      neck: event.data.neck
+    }
+
+    await statsStore.saveStatsAndPhotos(stats, photos)
+
+    toast.add({ title: 'Stats saved successfully', color: 'success' })
+    resetForm()
+
+    return navigateTo('/')
   } catch (error) {
     toast.add({
       title: error instanceof Error ? error.message : 'An error occurred',
       color: 'error'
     })
   }
+  isLoading.value = false;
 }
 </script>
