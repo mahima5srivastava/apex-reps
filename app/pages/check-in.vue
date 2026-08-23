@@ -10,94 +10,27 @@
       @submit="handleSubmit"
     >
       <UFormField
-        label="Weight (Kg)"
-        name="weight"
+        v-for="measurement in measurements"
+        :key="measurement.name"
+        :label="measurement.label"
+        :name="measurement.name"
         required
       >
         <UInput
-          v-model="state.weight"
+          v-model="state[measurement.name]"
           type="number"
           :min="0"
           :step="0.1"
         />
       </UFormField>
-      <UFormField
-        label="Waist (inch)"
-        name="waist"
-        required
-      >
-        <UInput
-          v-model="state.waist"
-          type="number"
-          :min="0"
-          :step="0.1"
-        />
-      </UFormField>
-      <UFormField
-        label="Neck (inch)"
-        name="neck"
-        required
-      >
-        <UInput
-          v-model="state.neck"
-          type="number"
-          :min="0"
-          :step="0.1"
-        />
-      </UFormField>
-      <UFormField
-        label="Hip (inch)"
-        name="hip"
-        required
-      >
-        <UInput
-          v-model="state.hip"
-          type="number"
-          :min="0"
-          :step="0.1"
-        />
-      </UFormField>
-      <UFormField
-        label="Photo Left"
-        name="photoLeft"
-        required
-      >
-        <UInput
-          type="file"
-          accept="image/*"
-          @change="state.photoLeft = ($event.target as HTMLInputElement)?.files?.[0] ?? undefined"
-        />
-      </UFormField>
-      <UFormField
-        label="Photo Front"
-        name="photoFront"
-      >
-        <UInput
-          type="file"
-          accept="image/*"
-          @change="state.photoFront = ($event.target as HTMLInputElement)?.files?.[0] ?? null"
-        />
-      </UFormField>
-      <UFormField
-        label="Photo Back"
-        name="photoBack"
-      >
-        <UInput
-          type="file"
-          accept="image/*"
-          @change="state.photoBack = ($event.target as HTMLInputElement)?.files?.[0] ?? null"
-        />
-      </UFormField>
-      <UFormField
-        label="Photo Right"
-        name="photoRight"
-      >
-        <UInput
-          type="file"
-          accept="image/*"
-          @change="state.photoRight = ($event.target as HTMLInputElement)?.files?.[0] ?? null"
-        />
-      </UFormField>
+      <PhotoUploadField
+        v-for="photo in photoFields"
+        :key="photo.name"
+        v-model="state[photo.stateKey]"
+        :label="photo.label"
+        :name="photo.name"
+        :required="photo.required"
+      />
       <UButton
         type="submit"
         :loading="isLoading"
@@ -114,6 +47,20 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 import { useStatsStore } from '@/stores/stats'
 import type { PhotoAngle } from '@/types'
 import { ALLOWED_IMAGE_TYPES } from '@/utils/constants'
+
+const measurements = [
+  { label: 'Weight (Kg)', name: 'weight' as const },
+  { label: 'Waist (inch)', name: 'waist' as const },
+  { label: 'Neck (inch)', name: 'neck' as const },
+  { label: 'Hip (inch)', name: 'hip' as const }
+]
+
+const photoFields = [
+  { label: 'Photo Left', name: 'photoLeft', stateKey: 'photoLeft' as const, angle: 'left' as PhotoAngle, required: true },
+  { label: 'Photo Front', name: 'photoFront', stateKey: 'photoFront' as const, angle: 'front' as PhotoAngle },
+  { label: 'Photo Back', name: 'photoBack', stateKey: 'photoBack' as const, angle: 'back' as PhotoAngle },
+  { label: 'Photo Right', name: 'photoRight', stateKey: 'photoRight' as const, angle: 'right' as PhotoAngle }
+]
 
 const toast = useToast()
 const statsStore = useStatsStore()
@@ -144,28 +91,28 @@ const state = reactive<{
   neck: string
   hip: string
   photoLeft: File | undefined
-  photoFront: File | null
-  photoBack: File | null
-  photoRight: File | null
+  photoFront: File | undefined
+  photoBack: File | undefined
+  photoRight: File | undefined
 }>({
   weight: '',
   waist: '',
   neck: '',
   hip: '',
   photoLeft: undefined,
-  photoFront: null,
-  photoBack: null,
-  photoRight: null
+  photoFront: undefined,
+  photoBack: undefined,
+  photoRight: undefined
 })
 
 const isLoading = ref(false)
 
 const buildPhotoPayload = (): { angle: PhotoAngle, file: File }[] => {
   const photos: { angle: PhotoAngle, file: File }[] = []
-  if (state.photoLeft) photos.push({ angle: 'left', file: state.photoLeft })
-  if (state.photoFront) photos.push({ angle: 'front', file: state.photoFront })
-  if (state.photoBack) photos.push({ angle: 'back', file: state.photoBack })
-  if (state.photoRight) photos.push({ angle: 'right', file: state.photoRight })
+  for (const photo of photoFields) {
+    const file = state[photo.stateKey]
+    if (file) photos.push({ angle: photo.angle, file })
+  }
   return photos
 }
 
@@ -174,10 +121,9 @@ const resetForm = () => {
   state.waist = ''
   state.neck = ''
   state.hip = ''
-  state.photoLeft = undefined
-  state.photoFront = null
-  state.photoBack = null
-  state.photoRight = null
+  for (const photo of photoFields) {
+    state[photo.stateKey] = undefined
+  }
 }
 
 const handleSubmit = async (event: FormSubmitEvent<Schema>) => {
