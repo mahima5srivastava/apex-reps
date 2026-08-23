@@ -98,7 +98,10 @@
           @change="state.photoRight = ($event.target as HTMLInputElement)?.files?.[0] ?? null"
         />
       </UFormField>
-      <UButton type="submit" :loading="isLoading">
+      <UButton
+        type="submit"
+        :loading="isLoading"
+      >
         Submit
       </UButton>
     </UForm>
@@ -155,7 +158,7 @@ const state = reactive<{
   photoRight: null
 })
 
-const isLoading = ref(false);
+const isLoading = ref(false)
 
 const buildPhotoPayload = (): { angle: PhotoAngle, file: File }[] => {
   const photos: { angle: PhotoAngle, file: File }[] = []
@@ -178,7 +181,7 @@ const resetForm = () => {
 }
 
 const handleSubmit = async (event: FormSubmitEvent<Schema>) => {
-  isLoading.value = true;
+  isLoading.value = true
   try {
     const photos = buildPhotoPayload()
     const stats = {
@@ -200,6 +203,6 @@ const handleSubmit = async (event: FormSubmitEvent<Schema>) => {
       color: 'error'
     })
   }
-  isLoading.value = false;
+  isLoading.value = false
 }
 </script>

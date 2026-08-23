@@ -85,6 +85,45 @@ export interface Database {
         }
         Relationships: []
       }
+      plans: {
+        Row: {
+          id: string
+          name: string
+          duration: number
+        }
+        Insert: {
+          id?: string
+          name?: string
+          duration?: number
+        }
+        Update: {
+          id?: string
+          name?: string
+          duration?: number
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          id: string
+          plan_id: string
+          start_date: string
+          end_date: string
+        }
+        Insert: {
+          id?: string
+          plan_id?: string
+          start_date?: string
+          end_date?: string
+        }
+        Update: {
+          id?: string
+          plan_id?: string
+          start_date?: string
+          end_date?: string
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
