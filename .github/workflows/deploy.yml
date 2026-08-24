@@ -30,11 +30,14 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Generate static site
-        run: nuxt generate
+        run: pnpm exec nuxt generate
         env:
           NUXT_APP_BASE_URL: "/"
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
+      - name: Write CNAME for custom domain
+        run: cp CNAME .output/public/CNAME
 
       - uses: actions/upload-pages-artifact@v4
         with:

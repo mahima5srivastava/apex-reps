@@ -7,14 +7,10 @@ export default defineNuxtConfig({
     'nuxt-charts'
   ],
 
-  devtools: {
-    enabled: true
-  },
-
   ssr: false,
 
-  nitro: {
-    prerender: { routes: ['/'] }
+  devtools: {
+    enabled: true
   },
 
   css: ['~/assets/css/main.css'],
@@ -27,6 +23,10 @@ export default defineNuxtConfig({
   },
 
   compatibilityDate: '2026-06-30',
+
+  nitro: {
+    prerender: { routes: ['/'] }
+  },
 
   eslint: {
     config: {

@@ -10,9 +10,9 @@ export async function compressImage(file: File, opts: CompressImageOptions = {})
   const quality = opts.quality ?? IMAGE_QUALITY
 
   if (
-    typeof createImageBitmap !== 'function' ||
-    typeof document === 'undefined' ||
-    typeof document.createElement !== 'function'
+    typeof createImageBitmap !== 'function'
+    || typeof document === 'undefined'
+    || typeof document.createElement !== 'function'
   ) {
     return file
   }
@@ -39,7 +39,7 @@ export async function compressImage(file: File, opts: CompressImageOptions = {})
     ctx.drawImage(bitmap, 0, 0, targetWidth, targetHeight)
     bitmap.close()
 
-    const blob = await new Promise<Blob | null>((resolve) =>
+    const blob = await new Promise<Blob | null>(resolve =>
       canvas.toBlob(resolve, 'image/jpeg', quality)
     )
 
