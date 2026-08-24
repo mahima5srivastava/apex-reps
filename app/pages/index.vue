@@ -97,7 +97,7 @@ const profileStore = useProfileStore()
 const subStore = useSubStore()
 const planStore = usePlanStore()
 const statsStore = useStatsStore()
-const isLoading = ref(false)
+const isLoading = ref(true)
 
 const latestStat = computed(() => {
   const stats = statsStore.stats
