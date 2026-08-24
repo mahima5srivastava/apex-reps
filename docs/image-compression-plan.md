@@ -1,35 +1,33 @@
-# Plan: Compress Progress Photos Before Storage
+# Progress Photo Compression
 
-## Context
-- **Upload flow:** `check-in.vue` → `statsStore.saveStatsAndPhotos` → `uploadPhoto` (`app/stores/stats.ts:208`) uploads the `File` straight to the Supabase `progress_photos` bucket.
-- **Display size is small:** `ProgressPhotoCompare.vue:79,93` caps images at `max-h-72` / `max-h-96` (~288–384px) with `object-contain`. We only need ~800–1000px source images.
-- **Everything runs in the browser**, so compression can be done client-side with the Canvas API — **no new dependency, no server changes, no storage-path rework.**
+> **Status: Implemented.** This documents behavior that is already shipped in
+> `app/utils/image.ts`, `app/utils/constants.ts`, and `app/stores/stats.ts`.
 
-## Steps
+## Why
 
-### 1. Add constants (`app/utils/constants.ts`)
-- `MAX_IMAGE_DIMENSION = 1000` (longest edge; generous for 2x retina displays).
-- `IMAGE_QUALITY = 0.82`.
+- **Upload flow:** `check-in.vue` → `useStatsStore().saveStatsAndPhotos` → `uploadPhoto` (`app/stores/stats.ts`) uploads the `File` straight to the Supabase `progress_photos` bucket.
+- **Display size is small:** `ProgressPhotoCompare.vue` caps images at `max-h-72` / `max-h-96` (~288–384px) with `object-contain`. Only ~800–1000px source images are needed.
+- **Everything runs in the browser**, so compression is done client-side with the Canvas API — no new dependency, no server changes, no storage-path rework.
 
-### 2. Create `app/utils/image.ts` — `compressImage(file, opts?): Promise<File>`
-- Use `createImageBitmap(file, { imageOrientation: 'from-image' })` to correct phone EXIF rotation.
-- Scale so the longest edge ≤ `MAX_IMAGE_DIMENSION`.
-- Draw to an offscreen `<canvas>`, export via `canvas.toBlob('image/jpeg', IMAGE_QUALITY)`.
-- Return a `File` named `<original-base>.jpg` (forces the `.jpg` extension so the existing `ext` derivation in `uploadPhoto` stays valid).
-- **Fallback:** if compressed size ≥ original, return the original `File` unchanged.
-- **SSR guard:** if `createImageBitmap` / canvas is unavailable, return the original (so it never breaks non-browser contexts).
+## What it does
 
-### 3. Wire into `uploadPhoto` (`app/stores/stats.ts:208`)
-- `const compressed = await compressImage(photo.file)` then upload `compressed`. The `ext` is derived from `photo.file.name`, so the compressed `.jpg` name yields the correct `.jpg` storage path.
+`compressImage(file, opts?): Promise<File>` (`app/utils/image.ts`):
 
-### 4. Keep existing validation
-- The 10MB form validation (`check-in.vue:102`) stays as-is — compressed files pass easily; no change needed.
+- Uses `createImageBitmap(file, { imageOrientation: 'from-image' })` to correct phone EXIF rotation.
+- Scales so the longest edge ≤ `MAX_IMAGE_DIMENSION` (`1000`, in `app/utils/constants.ts`).
+- Draws to an offscreen `<canvas>` and exports via `canvas.toBlob('image/jpeg', IMAGE_QUALITY)` (`0.82`).
+- Returns a `File` named `<original-base>.jpg` (forces `.jpg` so the existing `ext` derivation in `uploadPhoto` stays valid).
+- **Fallback:** if the compressed size ≥ the original, returns the original `File` unchanged.
+- **SSR / non-browser guard:** if `createImageBitmap` or `document.createElement` is unavailable, returns the original (never breaks non-browser contexts).
 
-## Decisions / Alternatives
-- **Format:** Recommended to convert everything to **JPEG** (biggest savings for photos; no transparency needed). Alternative: keep PNG-as-PNG, but canvas PNG output won't shrink much.
-- **Target dimension:** 1000px gives safe headroom; could drop to 800px for more savings.
-- **Testing:** `compressImage` depends on browser APIs, so a unit test needs a browser / happy-dom env (e.g. `@nuxt/test-utils`) — note that CI currently has no test runner. Suggest at least a manual check via `pnpm dev`.
+## Wiring
 
-## Out of Scope
-- Storing high-res originals — only compressed images are saved, per the goal of efficient bucket usage.
-- Backfilling existing photos already in the bucket.
+`uploadPhoto` (`app/stores/stats.ts`) calls `const compressed = await compressImage(photo.file)` and uploads `compressed`. The storage path is built with `buildPhotoStoragePath` (`app/utils/constants.ts`), which uses `compressed.name`'s `.jpg` extension, so the storage key is correct.
+
+The 10MB form validation in `check-in.vue` is unchanged — compressed files pass easily.
+
+## Decisions
+
+- **Format:** all images are converted to **JPEG** (biggest savings for photos; no transparency needed). PNG uploads are also re-encoded to JPEG.
+- **Target dimension:** `1000`px gives safe headroom for 2× retina displays; can drop to `800`px for more savings.
+- **Storage:** only compressed images are saved (efficient bucket usage). Existing photos already in the bucket are not backfilled.
