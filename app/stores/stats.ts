@@ -3,6 +3,7 @@ import { getSupabase } from '@/utils/supabase'
 import { useProfileStore } from '@/stores/profile'
 import { calculateBodyFatPercentage } from '@/utils/bodyFat'
 import { PROGRESS_PHOTOS_BUCKET, buildPhotoStoragePath } from '@/utils/constants'
+import { compressImage } from '@/utils/image'
 import type { PhotoAngle } from '@/types'
 
 interface Stats {
@@ -206,12 +207,13 @@ export const useStatsStore = defineStore('stats', {
     },
 
     async uploadPhoto(userId: string, statId: string, photo: PhotoInput) {
-      const ext = photo.file.name.split('.').pop() ?? 'jpg'
+      const compressed = await compressImage(photo.file)
+      const ext = compressed.name.split('.').pop() ?? 'jpg'
       const path = buildPhotoStoragePath(userId, statId, photo.angle, ext)
 
       const { error } = await getSupabase().storage
         .from(PROGRESS_PHOTOS_BUCKET)
-        .upload(path, photo.file)
+        .upload(path, compressed)
 
       if (error) throw new Error(error.message)
       return path
