@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Handoff Schema",
+  "type": "object",
+  "required": ["issue_id", "scope", "decisions", "tasks", "canonical_docs", "phase"],
+  "properties": {
+    "issue_id": { "type": "string" },
+    "mode": { "type": "string", "enum": ["feature", "bugfix", "refactor", "config", "docs"], "default": "feature" },
+    "scope": {
+      "type": "object",
+      "required": ["in", "out"],
+      "properties": {
+        "in": { "type": "array", "items": { "type": "string" } },
+        "out": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "choice", "rationale"],
+        "properties": {
+          "id": { "type": "string" },
+          "choice": { "type": "string" },
+          "rationale": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "affects": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "gate_level", "depends_on", "done"],
+        "properties": {
+          "id": { "type": "integer" },
+          "title": { "type": "string" },
+          "gate_level": { "type": "string", "enum": ["strict", "standard", "light"] },
+          "depends_on": { "type": "array", "items": { "type": "integer" } },
+          "done": { "type": "boolean" },
+          "outputs": { "type": "array", "items": { "type": "string" } },
+          "test_results": { "type": "object" }
+        }
+      }
+    },
+    "canonical_docs": {
+      "type": "object",
+      "required": ["plan", "decisions"],
+      "properties": {
+        "plan": { "type": "string" },
+        "decisions": { "type": "string" }
+      }
+    },
+    "phase": { "type": "string", "enum": ["plan", "implement", "review", "verify", "maintain", "done"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

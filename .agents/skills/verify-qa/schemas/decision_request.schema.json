@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Decision Request Schema",
+  "type": "object",
+  "required": ["question", "options", "impact", "recommendation", "threshold"],
+  "properties": {
+    "id": { "type": "string" },
+    "question": { "type": "string" },
+    "options": { "type": "array", "items": { "type": "string" }, "minItems": 2 },
+    "impact": { "type": "string" },
+    "recommendation": { "type": "string" },
+    "threshold": { "type": "string", "enum": ["architectural", "tactical"] },
+    "context": { "type": "string" },
+    "files_affected": { "type": "array", "items": { "type": "string" } },
+    "created_at": { "type": "string", "format": "date-time" },
+    "resolved": { "type": "boolean", "default": false },
+    "resolution": { "type": "string" },
+    "resolved_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}
