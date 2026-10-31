@@ -6,7 +6,9 @@
       v-else
       class="space-y-8 py-6"
     >
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div
+        class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      >
         <div>
           <h2 class="text-2xl font-bold">
             Welcome {{ profileStore.name }}!
@@ -82,7 +84,7 @@
         </div>
       </div>
     </div>
-  </ucontainer>
+  </UContainer>
 </template>
 
 <script setup lang="ts">
@@ -115,7 +117,9 @@ const summaries = computed(() => [
   },
   {
     label: 'Body Fat %',
-    value: latestStat.value ? `${(Math.round(latestStat.value.bfp * 10) / 10)}%` : '—'
+    value: latestStat.value
+      ? `${Math.round(latestStat.value.bfp * 10) / 10}%`
+      : '—'
   }
 ])
 
