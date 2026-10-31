@@ -63,13 +63,13 @@ public/
 
 Tables (in the `public` schema, all RLS-enabled):
 
-| Table          | Purpose                                                        |
-| -------------- | ------------------------------------------------------------- |
-| `profiles`     | One row per auth user: `name`, `role`, `sex`, `height`.        |
-| `stats`        | Each check-in: `weight`, `waist`, `hip`, `neck`, `bfp`.       |
-| `photos`       | One row per uploaded photo: `stat_id`, `angle`, `filename`.   |
-| `plans`        | Coaching plan catalog: `name`, `duration` (weeks).            |
-| `subscriptions`| Active plan for a user: `plan_id`, `start_date`, `end_date`.  |
+| Table           | Purpose                                                      |
+| --------------- | ------------------------------------------------------------ |
+| `profiles`      | One row per auth user: `name`, `role`, `sex`, `height`.      |
+| `stats`         | Each check-in: `weight`, `waist`, `hip`, `neck`, `bfp`.      |
+| `photos`        | One row per uploaded photo: `stat_id`, `angle`, `filename`.  |
+| `plans`         | Coaching plan catalog: `name`, `duration` (weeks).           |
+| `subscriptions` | Active plan for a user: `plan_id`, `start_date`, `end_date`. |
 
 **Storage:** a private `progress_photos` bucket. Photos are read via short-lived signed URLs (the dashboard requests a 7-day URL per selected check-in). RLS allows authenticated users to insert/view objects in that bucket.
 
@@ -94,14 +94,14 @@ The Supabase keys are read into `public.runtimeConfig` via `nuxt.config.ts` and 
 
 ### Scripts
 
-| Command             | Description                                  |
-| ------------------- | -------------------------------------------- |
-| `pnpm dev`          | Start the dev server.                        |
-| `pnpm build`        | Build for production (`nuxt build`).         |
-| `pnpm generate`     | Generate the static site (`.output/public`). |
-| `pnpm preview`      | Preview a production build locally.          |
-| `pnpm lint`         | Lint with ESLint.                            |
-| `pnpm typecheck`    | Type-check with `nuxt typecheck`.            |
+| Command          | Description                                  |
+| ---------------- | -------------------------------------------- |
+| `pnpm dev`       | Start the dev server.                        |
+| `pnpm build`     | Build for production (`nuxt build`).         |
+| `pnpm generate`  | Generate the static site (`.output/public`). |
+| `pnpm preview`   | Preview a production build locally.          |
+| `pnpm lint`      | Lint with ESLint.                            |
+| `pnpm typecheck` | Type-check with `nuxt typecheck`.            |
 
 ## Deployment
 

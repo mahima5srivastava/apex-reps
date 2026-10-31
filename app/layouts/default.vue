@@ -1,26 +1,22 @@
 <script lang="ts" setup>
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from "@/stores/auth";
 
-const authStore = useAuthStore()
-const isLoading = ref(false)
+const authStore = useAuthStore();
+const isLoading = ref(false);
 
 useHead({
-  meta: [
-    { name: 'viewport', content: 'width=device-width, initial-scale=1' }
-  ],
-  link: [
-    { rel: 'icon', href: '/favicon.ico' }
-  ],
+  meta: [{ name: "viewport", content: "width=device-width, initial-scale=1" }],
+  link: [{ rel: "icon", href: "/favicon.ico" }],
   htmlAttrs: {
-    lang: 'en'
-  }
-})
+    lang: "en",
+  },
+});
 
 const logout = async () => {
-  isLoading.value = true
-  await authStore.logout()
-  isLoading.value = false
-}
+  isLoading.value = true;
+  await authStore.logout();
+  isLoading.value = false;
+};
 </script>
 
 <template>
@@ -36,12 +32,7 @@ const logout = async () => {
       </template>
 
       <template #right>
-        <UButton
-          :loading="isLoading"
-          @click="logout"
-        >
-          Logout
-        </UButton>
+        <UButton :loading="isLoading" @click="logout"> Logout </UButton>
       </template>
     </UHeader>
 
@@ -53,7 +44,8 @@ const logout = async () => {
 
     <UFooter>
       <p class="text-sm text-muted">
-        &copy; {{ new Date().getFullYear() }} Mahima Srivastava. All rights reserved.
+        &copy; {{ new Date().getFullYear() }} Mahima Srivastava. All rights
+        reserved.
       </p>
     </UFooter>
   </div>

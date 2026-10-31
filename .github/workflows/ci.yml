@@ -27,8 +27,25 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Prettier
+        run: pnpm exec prettier --check .
+
       - name: Lint
         run: pnpm run lint
 
       - name: Typecheck
         run: pnpm run typecheck
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: E2E Tests (skipped in CI — requires Supabase)
+        if: false
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          pnpm exec playwright test
