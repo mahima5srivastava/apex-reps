@@ -1,3 +1,3 @@
-export type Sex = 'male' | 'female'
+export type Sex = "male" | "female";
 
-export type PhotoAngle = 'front' | 'left' | 'right' | 'back'
+export type PhotoAngle = "front" | "left" | "right" | "back";

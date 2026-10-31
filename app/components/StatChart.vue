@@ -1,40 +1,40 @@
 <script lang="ts" setup>
 interface StatDatum {
-  [key: string]: string | number
+  [key: string]: string | number;
 }
 
 const props = withDefaults(
   defineProps<{
-    showTitle?: boolean
-    title?: string
-    chartData: StatDatum[]
-    xKey?: string
-    xLabel?: string
-    yLabel?: string
-    valueKey?: string
-    categoryName?: string
-    categoryColor?: string
+    showTitle?: boolean;
+    title?: string;
+    chartData: StatDatum[];
+    xKey?: string;
+    xLabel?: string;
+    yLabel?: string;
+    valueKey?: string;
+    categoryName?: string;
+    categoryColor?: string;
   }>(),
   {
     showTitle: true,
-    title: 'Line Chart',
-    xKey: 'date',
-    xLabel: '',
-    yLabel: '',
-    valueKey: 'desktop',
-    categoryName: 'Value',
-    categoryColor: '#22c55e'
-  }
-)
+    title: "Line Chart",
+    xKey: "date",
+    xLabel: "",
+    yLabel: "",
+    valueKey: "desktop",
+    categoryName: "Value",
+    categoryColor: "#22c55e",
+  },
+);
 
 const categories = computed<Record<string, BulletLegendItemInterface>>(() => ({
-  [props.valueKey]: { name: props.categoryName, color: props.categoryColor }
-}))
+  [props.valueKey]: { name: props.categoryName, color: props.categoryColor },
+}));
 
 const xFormatter = (tick: number, _i?: number, _ticks?: number[]): string => {
-  const datum = props.chartData[tick]
-  return datum ? String(datum[props.xKey]) : ''
-}
+  const datum = props.chartData[tick];
+  return datum ? String(datum[props.xKey]) : "";
+};
 </script>
 
 <template>

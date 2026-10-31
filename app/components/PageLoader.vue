@@ -1,5 +1,7 @@
 <template>
-  <div class="h-screen w-screen flex justify-center items-center fixed z-50 bg-black/50 top-0 left-0">
+  <div
+    class="h-screen w-screen flex justify-center items-center fixed z-50 bg-black/50 top-0 left-0"
+  >
     <span class="loader" />
   </div>
 </template>
@@ -18,7 +20,7 @@
   transform: rotate(45deg);
 }
 .loader::before {
-  content: '';
+  content: "";
   box-sizing: border-box;
   width: calc(24 * var(--size));
   height: calc(24 * var(--size));
@@ -28,7 +30,7 @@
   animation: animloader 4s ease infinite;
 }
 .loader::after {
-  content: '';
+  content: "";
   box-sizing: border-box;
   position: absolute;
   left: 0;

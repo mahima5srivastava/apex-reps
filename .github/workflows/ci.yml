@@ -36,5 +36,13 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
       - name: E2E Tests
-        run: npx playwright install --with-deps chromium && npx playwright test
+        run: pnpm exec playwright install --with-deps chromium && pnpm exec playwright test

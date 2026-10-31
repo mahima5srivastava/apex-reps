@@ -1,11 +1,10 @@
 <template>
   <UContainer class="pb-8 max-w-3xl">
     <div class="my-6">
-      <h2 class="text-2xl font-bold">
-        Check-In
-      </h2>
+      <h2 class="text-2xl font-bold">Check-In</h2>
       <p class="text-muted mt-1">
-        Log your latest measurements and progress photos to track your transformation.
+        Log your latest measurements and progress photos to track your
+        transformation.
       </p>
     </div>
 
@@ -17,9 +16,7 @@
     >
       <UCard variant="subtle">
         <template #header>
-          <h3 class="text-lg font-semibold">
-            Body Measurements
-          </h3>
+          <h3 class="text-lg font-semibold">Body Measurements</h3>
         </template>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <UFormField
@@ -41,9 +38,7 @@
 
       <UCard variant="subtle">
         <template #header>
-          <h3 class="text-lg font-semibold">
-            Progress Photos
-          </h3>
+          <h3 class="text-lg font-semibold">Progress Photos</h3>
         </template>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <PhotoUploadField
@@ -58,11 +53,7 @@
       </UCard>
 
       <div class="flex justify-end">
-        <UButton
-          type="submit"
-          :loading="isLoading"
-          size="lg"
-        >
+        <UButton type="submit" :loading="isLoading" size="lg">
           Submit Check-In
         </UButton>
       </div>
@@ -71,113 +62,137 @@
 </template>
 
 <script setup lang="ts">
-import * as z from 'zod'
-import type { FormSubmitEvent } from '@nuxt/ui'
-import { useStatsStore } from '@/stores/stats'
-import type { PhotoAngle } from '@/types'
-import { ALLOWED_IMAGE_TYPES } from '@/utils/constants'
+import * as z from "zod";
+import type { FormSubmitEvent } from "@nuxt/ui";
+import { useStatsStore } from "@/stores/stats";
+import type { PhotoAngle } from "@/types";
+import { ALLOWED_IMAGE_TYPES } from "@/utils/constants";
 
 const measurements = [
-  { label: 'Weight (kg)', name: 'weight' as const },
-  { label: 'Waist (inch)', name: 'waist' as const },
-  { label: 'Neck (inch)', name: 'neck' as const },
-  { label: 'Hip (inch)', name: 'hip' as const }
-]
+  { label: "Weight (kg)", name: "weight" as const },
+  { label: "Waist (inch)", name: "waist" as const },
+  { label: "Neck (inch)", name: "neck" as const },
+  { label: "Hip (inch)", name: "hip" as const },
+];
 
 const photoFields = [
-  { label: 'Photo Left', name: 'photoLeft', stateKey: 'photoLeft' as const, angle: 'left' as PhotoAngle, required: true },
-  { label: 'Photo Front', name: 'photoFront', stateKey: 'photoFront' as const, angle: 'front' as PhotoAngle },
-  { label: 'Photo Back', name: 'photoBack', stateKey: 'photoBack' as const, angle: 'back' as PhotoAngle },
-  { label: 'Photo Right', name: 'photoRight', stateKey: 'photoRight' as const, angle: 'right' as PhotoAngle }
-]
+  {
+    label: "Photo Left",
+    name: "photoLeft",
+    stateKey: "photoLeft" as const,
+    angle: "left" as PhotoAngle,
+    required: true,
+  },
+  {
+    label: "Photo Front",
+    name: "photoFront",
+    stateKey: "photoFront" as const,
+    angle: "front" as PhotoAngle,
+  },
+  {
+    label: "Photo Back",
+    name: "photoBack",
+    stateKey: "photoBack" as const,
+    angle: "back" as PhotoAngle,
+  },
+  {
+    label: "Photo Right",
+    name: "photoRight",
+    stateKey: "photoRight" as const,
+    angle: "right" as PhotoAngle,
+  },
+];
 
-const toast = useToast()
-const statsStore = useStatsStore()
+const toast = useToast();
+const statsStore = useStatsStore();
 
 const imageFile = z
   .custom<File>(
-    val => val instanceof File && ALLOWED_IMAGE_TYPES.includes(val.type),
-    'Must be a valid image file (JPEG or PNG)'
+    (val) => val instanceof File && ALLOWED_IMAGE_TYPES.includes(val.type),
+    "Must be a valid image file (JPEG or PNG)",
   )
-  .refine(file => file.size <= 10 * 1024 * 1024, 'Image must be 10MB or smaller')
+  .refine(
+    (file) => file.size <= 10 * 1024 * 1024,
+    "Image must be 10MB or smaller",
+  );
 
 const schema = z.object({
-  weight: z.coerce.number().positive('Weight must be greater than 0'),
-  waist: z.coerce.number().positive('Waist must be greater than 0'),
-  neck: z.coerce.number().positive('Neck must be greater than 0'),
-  hip: z.coerce.number().positive('Hip must be greater than 0'),
+  weight: z.coerce.number().positive("Weight must be greater than 0"),
+  waist: z.coerce.number().positive("Waist must be greater than 0"),
+  neck: z.coerce.number().positive("Neck must be greater than 0"),
+  hip: z.coerce.number().positive("Hip must be greater than 0"),
   photoLeft: imageFile,
   photoFront: z.union([z.null(), imageFile]).optional(),
   photoBack: z.union([z.null(), imageFile]).optional(),
-  photoRight: z.union([z.null(), imageFile]).optional()
-})
+  photoRight: z.union([z.null(), imageFile]).optional(),
+});
 
-type Schema = z.output<typeof schema>
+type Schema = z.output<typeof schema>;
 
 const state = reactive<{
-  weight: string
-  waist: string
-  neck: string
-  hip: string
-  photoLeft: File | undefined
-  photoFront: File | undefined
-  photoBack: File | undefined
-  photoRight: File | undefined
+  weight: string;
+  waist: string;
+  neck: string;
+  hip: string;
+  photoLeft: File | undefined;
+  photoFront: File | undefined;
+  photoBack: File | undefined;
+  photoRight: File | undefined;
 }>({
-  weight: '',
-  waist: '',
-  neck: '',
-  hip: '',
+  weight: "",
+  waist: "",
+  neck: "",
+  hip: "",
   photoLeft: undefined,
   photoFront: undefined,
   photoBack: undefined,
-  photoRight: undefined
-})
+  photoRight: undefined,
+});
 
-const isLoading = ref(false)
+const isLoading = ref(false);
 
-const buildPhotoPayload = (): { angle: PhotoAngle, file: File }[] => {
-  const photos: { angle: PhotoAngle, file: File }[] = []
+const buildPhotoPayload = (): { angle: PhotoAngle; file: File }[] => {
+  const photos: { angle: PhotoAngle; file: File }[] = [];
   for (const photo of photoFields) {
-    const file = state[photo.stateKey]
-    if (file) photos.push({ angle: photo.angle, file })
+    const file = state[photo.stateKey];
+    if (file) photos.push({ angle: photo.angle, file });
   }
-  return photos
-}
+  return photos;
+};
 
 const resetForm = () => {
-  state.weight = ''
-  state.waist = ''
-  state.neck = ''
-  state.hip = ''
+  state.weight = "";
+  state.waist = "";
+  state.neck = "";
+  state.hip = "";
   for (const photo of photoFields) {
-    state[photo.stateKey] = undefined
+    state[photo.stateKey] = undefined;
   }
-}
+};
 
 const handleSubmit = async (event: FormSubmitEvent<Schema>) => {
-  isLoading.value = true
+  isLoading.value = true;
   try {
-    const photos = buildPhotoPayload()
+    const photos = buildPhotoPayload();
     const stats = {
       waist: event.data.waist,
       weight: event.data.weight,
       hip: event.data.hip,
-      neck: event.data.neck
-    }
+      neck: event.data.neck,
+    };
 
-    await statsStore.saveStatsAndPhotos(stats, photos)
+    await statsStore.saveStatsAndPhotos(stats, photos);
 
-    toast.add({ title: 'Stats saved successfully', color: 'success' })
-    resetForm()
+    toast.add({ title: "Stats saved successfully", color: "success" });
+    resetForm();
 
-    return navigateTo('/')
+    return navigateTo("/");
   } catch (error) {
     toast.add({
-      title: error instanceof Error ? error.message : 'An error occurred',
-      color: 'error'
-    })
+      title: error instanceof Error ? error.message : "An error occurred",
+      color: "error",
+    });
   }
-  isLoading.value = false
-}
+  isLoading.value = false;
+};
 </script>
