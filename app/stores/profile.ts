@@ -23,7 +23,7 @@ export const useProfileStore = defineStore('profile', {
         this.id = data.id
         this.name = data.name
         this.role = data.role
-        this.sex = data.sex
+        this.sex = data.sex as Sex
         this.height = data.height
       } catch (error) {
         console.log('Error fetching profile:', error)
