@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import { useFoodItemStore } from "@/stores/foodItem";
 import { calculateMacros } from "@/utils/foodMacros";
 import CustomFoodModal from "@/components/diet-plan/CustomFoodModal.vue";
@@ -20,6 +20,7 @@ interface Emits {
   "food-selected": [
     {
       foodItemId: string;
+      foodName: string;
       quantityG: number;
       macros: {
         calories: number;
@@ -46,6 +47,7 @@ const emit = defineEmits<Emits>();
 const store = useFoodItemStore();
 
 const searchQuery = ref("");
+const searchInput = ref<HTMLInputElement | null>(null);
 const selectedFoodId = ref(props.modelValue || "");
 const quantity = ref(props.quantity || 100);
 const showDropdown = ref(false);
@@ -86,6 +88,10 @@ async function handleSearch() {
           localSearchResults.value = store.searchResults;
           showDropdown.value = true;
           focusedIndex.value = -1;
+          // Ensure focus stays on input after search
+          nextTick(() => {
+            searchInput.value?.focus();
+          });
         }
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return;
@@ -157,13 +163,23 @@ function handleSelect(foodId: string) {
   showDropdown.value = false;
   searchQuery.value = selectedFood.value?.name || "";
   focusedIndex.value = -1;
+}
+
+function addFood() {
   emitFoodSelected();
+  // Clear search input and reset state after adding
+  searchQuery.value = "";
+  selectedFoodId.value = "";
+  quantity.value = 100;
+  showDropdown.value = false;
+  focusedIndex.value = -1;
 }
 
 function emitFoodSelected() {
   if (selectedFood.value && quantity.value > 0) {
     emit("food-selected", {
       foodItemId: selectedFood.value.id,
+      foodName: selectedFood.value.name,
       quantityG: quantity.value,
       macros: previewMacros.value,
     });
@@ -209,13 +225,13 @@ onUnmounted(() => {
     <!-- Search Input -->
     <div class="relative">
       <input
+        ref="searchInput"
         type="search"
         v-model="searchQuery"
         :placeholder="placeholder"
-        :disabled="disabled || store.loading"
+        :disabled="disabled"
         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         @input="handleSearch"
-        @focus="handleSearch"
         @click.stop="showDropdown = true"
         autocomplete="off"
         aria-label="Search foods"
@@ -313,8 +329,14 @@ onUnmounted(() => {
           step="1"
           class="w-24 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
           :disabled="disabled"
-          @change="emitFoodSelected"
         />
+        <button
+          @click="addFood"
+          :disabled="disabled"
+          class="px-3 py-1.5 bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+        >
+          Add
+        </button>
       </div>
 
       <!-- Macro Preview -->

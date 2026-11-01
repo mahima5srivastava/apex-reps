@@ -1,0 +1,125 @@
+{
+  "issue_id": "5b",
+  "mode": "bugfix",
+  "scope": {
+    "in": [
+      "Remove `macros` field from `toggleConsumed` upsert in `app/stores/dietPlan.ts`",
+      "Remove `macros` field from `fetchLogs` select in `app/stores/dietPlan.ts`",
+      "Remove `macros?: CalculatedMacros` from `DietPlanLog` interface in `app/stores/dietPlan.ts`",
+      "Add `onConflict` to `toggleConsumed` upsert (toggle-off duplicate key fix)",
+      "Store `accessToken` in authStore and use in `getSupabase(true)`",
+      "Remove auto-save watch from edit page (caused immediate redirect on load)",
+      "Fix edit page loading/error handling (`finally` block, redirect to list)",
+      "Verify save error toasts surface on plan save failure"
+    ],
+    "out": [
+      "Adding `macros` column to `diet_plan_logs` via migration"
+    ]
+  },
+  "decisions": [
+    {
+      "id": "bug-001-fix",
+      "choice": "Remove `macros` from `diet_plan_logs` operations (no migration)",
+      "rationale": "Simplest fix, macros already live on `diet_plan_food_items`, no migration needed"
+    },
+    {
+      "id": "bug-005-upsert-conflict",
+      "choice": "Add `onConflict: \"mentee_id, food_item_id, log_date\"` to upsert",
+      "rationale": "Upsert with onConflict correctly updates existing row instead of duplicate insert"
+    },
+    {
+      "id": "bug-006-auth-token",
+      "choice": "Store `accessToken` in authStore, use in `getSupabase(true)`",
+      "rationale": "`authStore.user.access_token` doesn't exist; `supabase.auth.getSession()` provides it"
+    },
+    {
+      "id": "bug-007-auto-save",
+      "choice": "Remove auto-save watch from edit page",
+      "rationale": "Auto-save fired on initial data population, causing immediate redirect. Explicit Save button handles saving."
+    },
+    {
+      "id": "bug-008-loading-error",
+      "choice": "try/catch/finally with loading dismiss + redirect to list on profile failure",
+      "rationale": "Ensures loading spinner dismisses and errors navigate to sensible page"
+    }
+  ],
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Fix BUG-001 — Remove `macros` from `diet_plan_logs` operations",
+      "type": "store",
+      "gate_level": "strict",
+      "depends_on": [],
+      "done": true,
+      "description": "Remove `macros` field from `toggleConsumed` upsert payload, `fetchLogs` select clause, and `DietPlanLog` interface in `app/stores/dietPlan.ts`",
+      "files": ["app/stores/dietPlan.ts"],
+      "tests": [
+        "Unit: toggleConsumed payload excludes macros",
+        "Unit: fetchLogs select excludes macros",
+        "Integration: toggle consumed inserts row into diet_plan_logs successfully"
+      ],
+      "test_results": "5 new tests pass; 3 pre-existing failures unrelated. Additional fix: added onConflict to upsert (verified via QA: toggle ON + OFF both work)",
+      "verification": "QA: mentee checks off item -> DB row created -> progress reflects consumption",
+      "rollback": "Revert the 3 removed lines; restore original behavior"
+    },
+    {
+      "id": 2,
+      "title": "Fix BUG-006 — Store auth access token for authenticated Supabase requests",
+      "type": "store + util",
+      "gate_level": "strict",
+      "depends_on": [],
+      "done": true,
+      "description": "Add `accessToken` to authStore state, populate from `supabase.auth.getSession()`, use in `getSupabase(true)` instead of missing `authStore.user.access_token`",
+      "files": ["app/stores/auth.ts", "app/utils/supabase.ts"],
+      "tests": ["QA: coach can navigate to edit page and RLS queries succeed"],
+      "verification": "Edit page loads plan data without redirecting; RLS-protected queries work in browser",
+      "rollback": "Revert authStore accessToken and supabase.ts changes"
+    },
+    {
+      "id": 3,
+      "title": "Fix BUG-007 — Remove auto-save watch from edit page",
+      "type": "page",
+      "gate_level": "strict",
+      "depends_on": [2],
+      "done": true,
+      "description": "Remove `watch` with `deep: true` that auto-called `savePlan()` after initial plan data population, causing immediate redirect to list page",
+      "files": ["app/pages/coach/diet-plans/[id]/edit.vue"],
+      "tests": ["QA: coach navigates to Edit page, page stays loaded with plan data"],
+      "verification": "Edit page loads and displays plan data without redirecting",
+      "rollback": "Re-add watch block"
+    },
+    {
+      "id": 4,
+      "title": "Fix BUG-008 — Edit page loading/error handling",
+      "type": "page",
+      "gate_level": "light",
+      "depends_on": [3],
+      "done": true,
+      "description": "Wrap onMounted in try/catch/finally with `loading.value = false` in finally; redirect to `/coach/diet-plans` on profile failure instead of `/`",
+      "files": ["app/pages/coach/diet-plans/[id]/edit.vue"],
+      "tests": ["QA: Edit page dismisses loading spinner and loads plan data"],
+      "verification": "Edit page loads completely with all meals/items displayed",
+      "rollback": "Revert onMounted changes"
+    },
+    {
+      "id": 5,
+      "title": "Verify error toasts surface on plan save failure",
+      "type": "page",
+      "gate_level": "light",
+      "depends_on": [],
+      "done": true,
+      "description": "Confirm savePlan catch block shows user-facing toast (present at line 169 of new.vue)",
+      "files": ["app/pages/coach/diet-plans/new.vue"],
+      "tests": ["QA: Attempt save with conflicting date -> error toast appears"],
+      "verification": "Error toast visible when save fails",
+      "rollback": "N/A (verification only)"
+    }
+  ],
+  "canonical_docs": {
+    "plan": "plan.md",
+    "decisions": "decisions.md"
+  },
+  "phase": "complete",
+  "created_at": "2026-11-01T00:00:00Z",
+  "updated_at": "2026-11-01T00:00:00Z"
+}

@@ -1,18 +1,30 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
+import { useAuthStore } from "@/stores/auth";
 
 let supabase: SupabaseClient<Database> | null = null;
 
-export const getSupabase = () => {
+export const getSupabase = (useUserToken = false) => {
   const config = useRuntimeConfig();
-  if (supabase) {
+  if (supabase && !useUserToken) {
     return supabase;
   }
 
-  supabase = createClient<Database>(
+  const authStore = useAuthStore();
+  const token = useUserToken ? authStore.accessToken : undefined;
+
+  return createClient<Database>(
+    config.public.supabaseUrl,
+    config.public.supabaseKey,
+    token ? { global: { headers: { Authorization: `Bearer ${token}` } } } : undefined
+  );
+};
+
+export const getServerSupabase = () => {
+  const config = useRuntimeConfig();
+  return createClient<Database>(
     config.public.supabaseUrl,
     config.public.supabaseKey,
   );
-  return supabase;
 };

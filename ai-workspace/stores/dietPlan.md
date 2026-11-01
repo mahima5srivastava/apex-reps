@@ -25,6 +25,12 @@
 | `toggleConsumed` | `itemId: string, consumed: boolean` | `Promise<void>` | Toggles consumption, syncs to Supabase |
 | `saveNotes` | `date: string, notes: string` | `Promise<void>` | Saves daily notes |
 | `clearPlan` | — | `void` | Clears all plan state |
+| `fetchMentees` | — | `Promise<Profile[]>` | Coach's mentees (`role='mentee' AND coach_id=auth.uid()`) |
+| `fetchCoachPlans` | — | `Promise<DietPlanWithMeals[]>` | Plans with meals + items for coach's mentees |
+| `createPlan` | `data: CreatePlanInput` | `Promise<void>` | Transactional insert: diet_plan + meals + food_items |
+| `updatePlan` | `id: string, data: UpdatePlanInput` | `Promise<void>` | Replaces meals/items on existing plan |
+| `deletePlan` | `id: string` | `Promise<void>` | Cascades deletes meals + food_items |
+| `fetchPlanForEdit` | `id: string` | `Promise<DietPlanWithMeals>` | Loads full plan structure for editing |
 
 ## Types
 
@@ -66,7 +72,6 @@ interface DietPlanLog {
   food_item_id: string;
   consumed: boolean;
   consumed_at: string | null;
-  macros?: CalculatedMacros;
 }
 ```
 

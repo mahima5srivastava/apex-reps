@@ -1,0 +1,191 @@
+{
+  "issue_id": "5",
+  "mode": "feature",
+  "scope": {
+    "in": [
+      "Extend dietPlanStore with coach CRUD actions (fetchMentees, fetchCoachPlans, createPlan, updatePlan, deletePlan, fetchPlanForEdit)",
+      "Enhance /coach/diet-plans.vue list page with real data",
+      "Integrate /coach/diet-plans/new.vue with createPlan action + Zod validation",
+      "Create /coach/diet-plans/[id]/edit.vue page with updatePlan/deletePlan",
+      "Add fetchMyMentees to profileStore (or coachStore)",
+      "Unit tests for foodMacros utilities"
+    ],
+    "out": [
+      "Drag-and-drop meal reordering",
+      "Bulk plan operations (copy week, templates)",
+      "Plan versioning/history",
+      "Coach dashboard analytics",
+      "Mentee plan view (already exists)"
+    ]
+  },
+  "decisions": [
+    {
+      "id": "mentee-source",
+      "choice": "profiles where role='mentee' AND coach_id=auth.uid()",
+      "rationale": "Existing coach_id FK on profiles; simple query; no new tables"
+    },
+    {
+      "id": "list-grouping",
+      "choice": "group by mentee",
+      "rationale": "Matches mock UI; scales better; clear hierarchy"
+    },
+    {
+      "id": "edit-route",
+      "choice": "/coach/diet-plans/:id/edit",
+      "rationale": "RESTful; shareable URL; browser history works"
+    },
+    {
+      "id": "meal-order",
+      "choice": "fixed (Breakfast=0, Lunch=1, Dinner=2, Snacks=3+)",
+      "rationale": "Standard sequence; simpler implementation"
+    },
+    {
+      "id": "unique-constraint",
+      "choice": "client check + server error handling",
+      "rationale": "Proactive UX; server constraint as safety net"
+    },
+    {
+      "id": "coach-notes",
+      "choice": "include optional textarea",
+      "rationale": "Column exists in schema; low effort"
+    },
+    {
+      "id": "validation",
+      "choice": "Zod schema",
+      "rationale": "Consistent with CustomFoodModal; type-safe"
+    },
+    {
+      "id": "status-badges",
+      "choice": "client-side date comparison",
+      "rationale": "Pure function of dates; no extra data"
+    },
+    {
+      "id": "create-transaction",
+      "choice": "sequential inserts with rollback",
+      "rationale": "Pattern from statsStore.insertStat; no RPC needed"
+    },
+    {
+      "id": "update-strategy",
+      "choice": "delete old meals/items -> insert new",
+      "rationale": "Simpler than diffing; cascade handles cleanup"
+    }
+  ],
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Extend dietPlanStore with Coach CRUD Actions",
+      "type": "store",
+      "gate_level": "strict",
+      "depends_on": [],
+      "done": true,
+      "description": "Add coach-facing actions to useDietPlanStore: fetchMentees, fetchCoachPlans, createPlan, updatePlan, deletePlan, fetchPlanForEdit. Transactional insert for plan + meals + food_items.",
+      "files": [
+        "app/stores/dietPlan.ts"
+      ],
+      "tests": [
+        "Unit: createPlan input validation",
+        "Integration: createPlan inserts 3 tables atomically",
+        "Integration: fetchCoachPlans returns correct structure",
+        "Integration: updatePlan replaces meals/items correctly",
+        "Integration: deletePlan cascades"
+      ],
+      "verification": "Run integration tests against local Supabase; verify rows in diet_plans, diet_plan_meals, diet_plan_food_items."
+    },
+    {
+      "id": 2,
+      "title": "Enhance List Page (/coach/diet-plans.vue)",
+      "type": "page",
+      "gate_level": "standard",
+      "depends_on": [1],
+      "done": true,
+      "description": "Replace mock data with real fetchMentees + fetchCoachPlans. Show mentees grouped with their plans. Each plan shows: name, date range, status badge (active/upcoming/expired), actions (View, Edit).",
+      "files": [
+        "app/pages/coach/diet-plans.vue"
+      ],
+      "tests": [
+        "Integration: Page loads mentees + plans from store",
+        "Unit: Status badge logic (active/upcoming/expired based on date)"
+      ],
+      "verification": "Manual check in browser; coach sees real data."
+    },
+    {
+      "id": 3,
+      "title": "Create Plan Page - Backend Integration (/coach/diet-plans/new.vue)",
+      "type": "page",
+      "gate_level": "strict",
+      "depends_on": [1],
+      "done": true,
+      "description": "Replace mock save with dietPlanStore.createPlan. Add Zod validation schema for plan form. Connect FoodSelector to meal builder. Meal macros display using sumMacros. On success, redirect to list with toast.",
+      "files": [
+        "app/pages/coach/diet-plans/new.vue"
+      ],
+      "tests": [
+        "Unit: Zod schema validates required fields, date logic",
+        "Integration: Submit creates plan + meals + items in DB",
+        "Integration: Meal macros display correctly"
+      ],
+      "verification": "Create plan in browser; verify in Supabase dashboard."
+    },
+    {
+      "id": 4,
+      "title": "Edit Plan Page (/coach/diet-plans/[id]/edit.vue)",
+      "type": "page",
+      "gate_level": "standard",
+      "depends_on": [1, 3],
+      "done": true,
+      "description": "New page. Fetch plan with meals/items via fetchPlanForEdit. Pre-populate form. Same meal builder as create. On save, call updatePlan. On delete, call deletePlan with confirmation.",
+      "files": [
+        "app/pages/coach/diet-plans/[id]/edit.vue",
+        "app/stores/dietPlan.ts"
+      ],
+      "tests": [
+        "Integration: fetchPlanForEdit loads full plan structure",
+        "Integration: updatePlan replaces meals/items correctly",
+        "Integration: deletePlan removes plan + cascades"
+      ],
+      "verification": "Edit existing plan in browser; verify changes persist."
+    },
+    {
+      "id": 5,
+      "title": "Add Coach Mentee Fetching to Profile Store",
+      "type": "store",
+      "gate_level": "light",
+      "depends_on": [1],
+      "done": true,
+      "description": "Add fetchMyMentees() to useProfileStore. Query profiles where role='mentee' AND coach_id=auth.uid(). Used by create/edit pages for mentee dropdown.",
+      "files": [
+        "app/stores/profile.ts"
+      ],
+      "tests": [
+        "Integration: Returns only coach's mentees"
+      ],
+      "verification": "Mentee dropdown shows correct names."
+    },
+    {
+      "id": 6,
+      "title": "Unit Tests for Macro Utilities",
+      "type": "test",
+      "gate_level": "strict",
+      "depends_on": [],
+      "done": true,
+      "description": "Add Vitest unit tests for calculateMacros and sumMacros in app/utils/foodMacros.ts.",
+      "files": [
+        "tests/unit/foodMacros.spec.ts"
+      ],
+      "tests": [
+        "calculateMacros scales correctly for various quantities",
+        "calculateMacros throws on quantity <= 0",
+        "sumMacros aggregates multiple items",
+        "sumMacros returns zeros for empty array"
+      ],
+      "verification": "pnpm test:unit --run passes."
+    }
+  ],
+  "canonical_docs": {
+    "plan": "plan.md",
+    "decisions": "decisions.md"
+  },
+  "phase": "complete",
+  "created_at": "2026-10-31T00:00:00Z",
+  "updated_at": "2026-11-01T08:00:00Z"
+}

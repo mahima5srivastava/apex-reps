@@ -1,6 +1,6 @@
 ---
 name: verify-qa
-description: "Black-box QA verification. Agent runs the app (Playwright CLI, browser, curl) and executes user workflows from the outside. Verifies functionality works as intended. Fourth step: plan-feature → implement-task → review-code → verify-qa → maintain-context. Reads handoff.json + review.md, outputs qa-report.md. No test code writing — interactive verification."
+description: "Black-box QA verification. Agent drives the application like a real user through agent-browser (headed Chrome via CDP) — clicking, typing, navigating — and verifies behavior end-to-end. Does NOT write test scripts. Fourth step: plan-feature → implement-task → review-code → verify-qa → maintain-context. Reads handoff.json + review.md, outputs qa-report.md."
 ---
 
 # Verify QA Skill
@@ -8,6 +8,8 @@ description: "Black-box QA verification. Agent runs the app (Playwright CLI, bro
 ## Purpose
 
 **Black-box QA verification** — test the application from the outside like a real QA engineer. **Fourth step** in workflow. Runs the app, executes user workflows, verifies API, checks database. No test code writing.
+
+**Browser tool:** `agent-browser` (https://agent-browser.dev) — a headed Chrome automation CLI for AI agents. Returns a compact accessibility tree with deterministic element refs (`@e1`, `@e2`, …), so the agent inspects exactly what a user sees, with low token cost.
 
 **Human-Readable Output:** QA reports use clear workflow tables, plain-language observations, severity-ranked bugs, and cross-verification matrices. No raw logs or machine formats. A human can triage findings in minutes.
 
@@ -73,61 +75,44 @@ Minor UX issues → follow-up issues, don't block.
 
 ## Fast-Fail Configuration (Required)
 
-**Playwright config for QA (test mode):**
+### agent-browser setup (one-time)
 
-```typescript
-// playwright.config.ts (or inline)
-export default {
-  // ...
-  use: {
-    baseURL: "http://localhost:3000",
-    trace: "on-first-retry",
-  },
-  webServer: {
-    command: "pnpm dev",
-    url: "http://localhost:3000",
-    reuseExistingServer: true,
-    timeout: 120000,
-  },
-  // Fast-fail settings
-  retries: 0,
-  timeout: 30000, // not 120000
-  // Disable Vite error overlay
-  env: {
-    VITE_CONFIG_NATIVE_IGNORE_WARNING: "true",
-  },
-};
+```bash
+# Install Chrome (first time only; cached after)
+npx agent-browser install
 ```
 
-**Runtime error detection:**
+### Launch a headed Chrome session against the dev server
 
-```typescript
-// In test setup or first test
-test.beforeEach(async ({ page }) => {
-  // Catch console errors immediately
-  page.on("console", (msg) => {
-    if (msg.type() === "error") {
-      throw new Error(`Console error: ${msg.text()}`);
-    }
-  });
-  
-  // Catch unhandled page errors
-  page.on("pageerror", (err) => {
-    throw err;
-  });
-  
-  // Catch failed requests
-  page.on("response", (response) => {
-    if (response.status() >= 500) {
-      throw new Error(`Server error ${response.status()}: ${response.url()}`);
-    }
-  });
-});
+```bash
+# agent-browser opens a real Chrome window connected to your dev server
+npx agent-browser open http://localhost:3000
+
+# The daemon persists between commands — no need to re-open per action
 ```
+
+**Why agent-browser instead of Playwright:**
+- Real Chrome via Chrome DevTools Protocol (CDP), not a headless test runner
+- Compact accessibility-tree snapshots (~200-400 tokens) instead of full DOM (~3000-5000 tokens)
+- Deterministic element refs (`@e5`, `@e12`) — click/type by ref, no flaky CSS selectors
+- Stateful session: the daemon keeps Chrome alive between commands
+- Headed browsers are exempt from the default idle timeout (good for interactive QA)
+- Built-in screenshots, video, network, and storage inspection
+
+**agent-browser commands used in QA:**
+
+| Command | Purpose |
+|---------|---------|
+| `npx agent-browser open <url>` | Open Chrome to a URL (starts session) |
+| `npx agent-browser snapshot` | Get accessibility tree with refs — "what the user sees" |
+| `npx agent-browser click @ref` | Click a button/link/input by ref |
+| `npx agent-browser type @ref "text"` | Type into a focused input by ref |
+| `npx agent-browser screenshot <file>.png` | Capture full-page screenshot as evidence |
+| `npx agent-browser close` | End the session |
 
 ---
 
-## QA Engineer Workflow
+## QA Engineer Workflow (Interactive — Drive Like a User)
 
 ```
 1. START ENVIRONMENT
@@ -136,63 +121,104 @@ test.beforeEach(async ({ page }) => {
    ├─ Start dev server (pnpm dev)
    └─ Verify server responds (curl http://localhost:3000)
 
-2. EXECUTE WORKFLOWS (Black-Box — from handoff.json scope.in)
-   ├─ Open browser → navigate as user
-   ├─ Follow happy path (login → feature → verify)
-   ├─ Follow edge cases (empty state, errors, boundaries)
-   ├─ Test permissions (coach vs mentee, auth vs unauth)
-   └─ Test API directly (curl POST/GET/PATCH/DELETE)
+2. LAUNCH HEADLESS-CHROME SESSION (agent-browser)
+   └─ npx agent-browser open http://localhost:3000
+   └─ npx agent-browser snapshot   (confirm page loaded)
 
-3. VERIFY EXPECTATIONS
-   ├─ UI: elements visible, data correct, navigation works
-   ├─ API: status codes, response shape, data integrity
-   ├─ State: database reflects changes, RLS enforced
+3. EXECUTE WORKFLOWS (Black-Box — from handoff.json scope.in)
+   ├─ snapshot → identify refs for the elements a user would interact with
+   ├─ type @ref / click @ref as a user would (login → feature → verify)
+   ├─ snapshot after each key step — inspect the accessibility tree
+   ├─ Follow happy path exactly as a user would
+   ├─ Follow edge cases (empty states, errors, invalid input, back/refresh)
+   ├─ Test permissions (coach vs mentee, auth vs unauth)
+   ├─ Explore off-script: click unexpected buttons, navigate mid-flow, refresh
+   ├─ screenshot as evidence at key steps and on failures
+   └─ Test API directly (curl POST/GET/PATCH/DELETE) for data integrity
+
+4. VERIFY EXPECTATIONS
+   ├─ UI: elements visible, data correct, navigation works (from snapshots)
+   ├─ API: status codes, response shape, data integrity (curl)
+   ├─ State: database reflects changes, RLS enforced (supabase / psql)
    └─ Cross-check: UI matches API matches DB
 
-4. DOCUMENT FINDINGS → qa-report.md
+5. DOCUMENT FINDINGS → qa-report.md
    ├─ Pass/Fail/Skipped per workflow
-   ├─ Screenshots/recordings for failures
-   ├─ Steps to reproduce bugs
+   ├─ Screenshots for failures and key steps
+   ├─ Steps to reproduce bugs (as a user would experience them)
    └─ Update ai-workspace/changes/<id>/qa-report.md
+
+6. CLOSE SESSION
+   └─ npx agent-browser close
+```
+
+### What "drive like a user" means with agent-browser
+
+- **Do not** write `.spec.ts` test files with `expect()` assertions.
+- **Do** use `snapshot` to see what's on screen, then `click @ref` / `type @ref` to interact — exactly like a user clicking/typing.
+- **Do** run `snapshot` after each workflow step so you can visually inspect the result via the accessibility tree.
+- **Do** explore off-script: try invalid dates, click "Cancel", hit browser back, refresh mid-form, switch users — report UX friction you notice.
+- **Do** take screenshots as evidence: `npx agent-browser screenshot qa-<workflow>-<step>.png`.
+
+### Example: reproducing a bug like a user would
+
+```bash
+# 1. Open the app
+npx agent-browser open http://localhost:3000
+
+# 2. See the login form (snapshot shows Email @e5, Password @e6, Continue @e3)
+npx agent-browser snapshot
+
+# 3. Log in as coach
+npx agent-browser type @e5 "coach2@example.com"
+npx agent-browser type @e6 "testpassword123"
+npx agent-browser click @e3
+
+# 4. Navigate to the feature
+npx agent-browser click @<diet-plans-link-ref>
+npx agent-browser snapshot   # inspect what renders
+
+# 5. Interact with form fields
+npx agent-browser type @<plan-name-ref> "My Test Plan"
+npx agent-browser click @<save-btn-ref>
+npx agent-browser snapshot   # did the plan appear? any error?
+
+# 6. Screenshot evidence
+npx agent-browser screenshot qa-coach-create-plan.png
 ```
 
 ---
 
-## Tools: Playwright CLI (Interactive Mode)
+## Tools: agent-browser (Browser Testing)
 
 ### Start Interactive Session
 
 ```bash
-# Option 1: Playwright Codegen (records your actions)
-npx playwright codegen http://localhost:3000
+# One-time: install Chrome
+npx agent-browser install
 
-# Option 2: Playwright REPL (interactive commands)
-npx playwright open http://localhost:3000
-
-# Option 3: Headed mode with pause (for debugging)
-npx playwright test --headed --debug
+# Each QA session: open the dev server
+npx agent-browser open http://localhost:3000
 ```
 
-### Useful Interactive Commands
+### Interactive commands (type directly, no test file)
 
 ```bash
-# In Playwright REPL or codegen:
-await page.goto('/login')
-await page.fill('input[name="email"]', 'test@example.com')
-await page.fill('input[name="password"]', 'testpassword123')
-await page.click('button[type="submit"]')
-await page.waitForURL('/')
+# See what's on the page (accessibility tree with refs)
+npx agent-browser snapshot
 
-# Take screenshot
-await page.screenshot({ path: 'qa-login-success.png', fullPage: true })
+# Interact like a user
+npx agent-browser type @e5 "coach2@example.com"
+npx agent-browser click @e3
 
-# Get text content
-const text = await page.locator('h2').textContent()
-console.log(text)
+# Capture evidence
+npx agent-browser screenshot qa-dashboard.png
 
-# Check network
-await page.waitForResponse('**/api/food-items**')
+# End session
+npx agent-browser close
 ```
+
+**Never write** `.spec.ts` files or run `npx playwright test` for QA verification. The goal is human-like exploration, not encoded assertions.
 
 ---
 
@@ -294,12 +320,12 @@ curl -X GET 'http://localhost:54321/rest/v1/diet_plans?mentee_id=eq.<other-mente
 
 ## Verification Checklist (Per Workflow)
 
-### UI Verification
+### UI Verification (from agent-browser snapshots)
 
 - [ ] Page loads without console errors
-- [ ] Expected elements visible (headings, inputs, buttons)
+- [ ] Expected elements visible (headings, inputs, buttons) — confirmed via snapshot refs
 - [ ] Data displays correctly (names, numbers, dates)
-- [ ] Interactions work (click, type, select, navigate)
+- [ ] Interactions work (click, type, select, navigate) — confirmed via agent-browser
 - [ ] Loading states show during async operations
 - [ ] Error states show user-friendly messages
 - [ ] Empty states show helpful guidance
@@ -348,6 +374,7 @@ SELECT * FROM food_items WHERE source = 'custom' AND created_by = '<coach-id>';
 
 **Date:** <ISO timestamp>
 **Environment:** local dev (supabase + pnpm dev)
+**Browser:** agent-browser (headed Chrome via CDP)
 **Test User:** test@example.com (mentee) / coach@example.com (coach)
 **Commit:** <sha>
 **Review:** review.md (APPROVED)
@@ -361,7 +388,7 @@ SELECT * FROM food_items WHERE source = 'custom' AND created_by = '<coach-id>';
 **Status:** PASS / FAIL
 **Steps:**
 
-1. Login as coach
+1. Login as coach (agent-browser type @email, type @password, click @continue)
 2. Navigate to /coach/diet-plans
 3. Click "Create Plan"
 4. Select mentee "Test Mentee"
@@ -490,17 +517,21 @@ Agent:
 1. READS: review.md (APPROVED), handoff.json (scope, acceptance criteria)
 2. STARTS ENV: supabase start → pnpm dev → wait for ready
 3. SEEDS DATA: runs SQL for test coach + mentee users
-4. OPENS BROWSER: npx playwright codegen http://localhost:3000
-5. EXECUTES WORKFLOWS (from handoff.json scope.in):
-   - Coach login → create plan → verify
-   - Mentee login → view plan → check items → verify bars
-   - Date nav → notes → verify persistence
-   - Offline test → disconnect → check items → reconnect → verify sync
-6. TESTS API: curl commands for each endpoint + RLS
-7. CHECKS DB: supabase db shell → verify records
-8. CROSS-VERIFIES: UI bars = API sums = DB records
-9. WRITES QA REPORT: ai-workspace/changes/4-food-database-selector/qa-report.md
-10. REPORTS: "QA complete. 7/8 workflows pass. 1 minor UX issue. 2 follow-up issues. Ready for maintain-context."
+4. OPENS CHROME SESSION: npx agent-browser open http://localhost:3000
+5. EXECUTES WORKFLOWS (drive like a user, snapshot to inspect):
+   - snapshot → find refs → type @ref / click @ref as a user would
+   - Login as coach → /coach/diet-plans → create plan → verify (snapshot + screenshot)
+   - Login as mentee → /diet-plan → view plan → check items → verify bars
+   - Explore edge cases: back/refresh mid-flow, invalid dates, wrong user
+   - snapshot after each step to confirm UI matches intent
+   - Test API directly (curl) for each endpoint + RLS
+   - Check DB (supabase db shell) → verify records match UI
+6. CROSS-VERIFIES: UI bars = API sums = DB records
+7. CLOSES SESSION: npx agent-browser close
+8. WRITES QA REPORT: ai-workspace/changes/4-food-database-selector/qa-report.md
+   - Screenshots embedded as evidence
+   - Pass/fail per workflow, steps to reproduce bugs
+9. REPORTS: "QA complete. X/Y workflows pass. Z minor UX issues. N follow-up issues. Ready for maintain-context."
 ```
 
 ---
@@ -525,11 +556,12 @@ Agent:
 
 | QA Engineer (This Skill)       | Test Automation                |
 | ------------------------------ | ------------------------------ |
-| Runs app, clicks like user     | Writes code that clicks        |
-| Explores edge cases manually   | Encodes known paths            |
+| Drives headed Chrome via agent-browser | Writes `.spec.ts` test files   |
+| Snapshots to visually inspect  | Runs assertions in CI          |
+| Explores edge cases manually   | Encodes known happy paths      |
 | Verifies "does it feel right?" | Verifies "does it match spec?" |
-| Finds unknown bugs             | Prevents known regressions     |
-| Output: qa-report.md           | Output: test-results.xml       |
+| Finds unknown UX bugs          | Prevents known regressions     |
+| Output: qa-report.md + screenshots | Output: test-results.xml    |
 | **Complements** automation     | **Complements** QA             |
 
 ---
@@ -545,3 +577,8 @@ Agent:
    - Key workflows for your domain
 3. Add to ai-workspace/changes/README.md:
    - QA report template reference
+```
+
+Let me verify the file was written correctly.
+<tool_call>
+<function=shell>

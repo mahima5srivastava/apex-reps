@@ -11,7 +11,8 @@ const profileStore = useProfileStore();
 const dietPlanStore = useDietPlanStore();
 
 const loading = ref(true);
-const selectedDate = ref(new Date().toISOString().split("T")[0]);
+const today = new Date().toISOString().split("T")[0] ?? "";
+const selectedDate = ref<string>(today);
 
 onMounted(async () => {
   if (!authStore.isAuthenticated) {
@@ -40,7 +41,7 @@ async function loadPlanForDate(date: string) {
 }
 
 watch(selectedDate, (newDate) => {
-  loadPlanForDate(newDate);
+  if (newDate) loadPlanForDate(newDate);
 });
 
 function formatDate(dateStr: string) {
@@ -53,19 +54,19 @@ function formatDate(dateStr: string) {
 }
 
 function prevDay() {
-  const date = new Date(selectedDate.value);
+  const date = new Date(selectedDate.value ?? today);
   date.setDate(date.getDate() - 1);
-  selectedDate.value = date.toISOString().split("T")[0];
+  selectedDate.value = date.toISOString().split("T")[0] ?? today;
 }
 
 function nextDay() {
-  const date = new Date(selectedDate.value);
+  const date = new Date(selectedDate.value ?? today);
   date.setDate(date.getDate() + 1);
-  selectedDate.value = date.toISOString().split("T")[0];
+  selectedDate.value = date.toISOString().split("T")[0] ?? today;
 }
 
 function goToToday() {
-  selectedDate.value = new Date().toISOString().split("T")[0];
+  selectedDate.value = today;
 }
 
 interface MacroAccumulator {
@@ -165,29 +166,44 @@ async function saveNotes(notes: string) {
             </div>
           </div>
         </div>
-      </header>
-      
-      <div class="space-y-4 mb-8">
-        <div v-for="macro in [
-          { key: 'calories', label: 'Calories', unit: 'kcal', color: 'orange' },
-          { key: 'protein_g', label: 'Protein', unit: 'g', color: 'red' },
-          { key: 'carbs_g', label: 'Carbs', unit: 'g', color: 'blue' },
-          { key: 'fat_g', label: 'Fat', unit: 'g', color: 'yellow' },
-          { key: 'fiber_g', label: 'Fiber', unit: 'g', color: 'green' }
-        ]" :key="macro.key" class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          <div class="flex items-center justify-between mb-2">
-            <span class="font-medium text-gray-900 dark:text-gray-100 capitalize">{{ macro.label }}</span>
-            <span class="text-sm text-gray-500 dark:text-gray-400">
-              {{ getConsumedMacros()[macro.key] }} / {{ getDayTotalMacros()[macro.key] }} {{ macro.unit }}
-            </span>
-          </div>
-          <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-            <div class="h-full transition-all duration-300" :style="{ width: getProgressPercentage(getConsumedMacros()[macro.key], getDayTotalMacros()[macro.key]) + '%', backgroundColor: 'var(--color-' + macro.color + ')' }"></div>
-          </div>
-        </div>
-      </div>
+</header>
       
       <template v-if="dietPlanStore.currentPlan">
+        <!-- Consolidated Daily Progress Card -->
+        <UCard class="mb-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Daily Progress</h2>
+              <span class="text-sm text-gray-500 dark:text-gray-400">
+                {{ getConsumedMacros().calories }} / {{ getDayTotalMacros().calories }} kcal
+              </span>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div v-for="macro in [
+                { key: 'calories', label: 'Calories', unit: 'kcal', color: 'orange', bg: 'bg-orange-500' },
+                { key: 'protein_g', label: 'Protein', unit: 'g', color: 'red', bg: 'bg-red-500' },
+                { key: 'carbs_g', label: 'Carbs', unit: 'g', color: 'blue', bg: 'bg-blue-500' },
+                { key: 'fat_g', label: 'Fat', unit: 'g', color: 'yellow', bg: 'bg-yellow-500' },
+                { key: 'fiber_g', label: 'Fiber', unit: 'g', color: 'green', bg: 'bg-green-500' }
+              ]" :key="macro.key">
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ macro.label }}</span>
+                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                      {{ getConsumedMacros()[macro.key] }} / {{ getDayTotalMacros()[macro.key] }} {{ macro.unit }}
+                    </span>
+                  </div>
+                  <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div class="h-full transition-all duration-300 rounded-full" :class="macro.bg" :style="{ width: getProgressPercentage(getConsumedMacros()[macro.key], getDayTotalMacros()[macro.key]) + '%' }"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </UCard>
+
+        <!-- Meals -->
         <div class="space-y-6">
           <div v-for="meal in dietPlanStore.currentPlan.meals" :key="meal.id" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="px-4 py-3 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
