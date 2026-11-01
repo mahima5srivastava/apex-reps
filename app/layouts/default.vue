@@ -1,7 +1,10 @@
 <script lang="ts" setup>
 import { useAuthStore } from "@/stores/auth";
+import { useRouter } from "vue-router";
 
 const authStore = useAuthStore();
+const router = useRouter();
+
 const isLoading = ref(false);
 
 useHead({
@@ -16,6 +19,7 @@ const logout = async () => {
   isLoading.value = true;
   await authStore.logout();
   isLoading.value = false;
+  router.push("/login");
 };
 </script>
 
@@ -29,10 +33,31 @@ const logout = async () => {
         >
           <AppLogo class="w-auto h-6 shrink-0" />
         </NuxtLink>
+
+        <nav class="hidden md:flex items-center gap-1 ms-6">
+          <NuxtLink
+            v-if="authStore.user?.user_metadata?.role === 'coach'"
+            to="/coach"
+            class="px-3 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            active-class="bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+          >
+            Coach Portal
+          </NuxtLink>
+          <NuxtLink
+            v-else
+            to="/diet-plan"
+            class="px-3 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            active-class="bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+          >
+            Diet Plan
+          </NuxtLink>
+        </nav>
       </template>
 
       <template #right>
-        <UButton :loading="isLoading" @click="logout"> Logout </UButton>
+        <UButton :loading="isLoading" @click="logout" variant="ghost" class="hidden sm:flex">
+          Logout
+        </UButton>
       </template>
     </UHeader>
 

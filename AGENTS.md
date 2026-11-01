@@ -43,11 +43,11 @@
 | Store          | Key Actions                                                            |
 | -------------- | ---------------------------------------------------------------------- |
 | `auth`         | `fetchSession()`, `login()`, `logout()`                                |
-| `profile`      | `fetchProfile()`                                                       |
+| `profile`      | `fetchProfile()`, `fetchMyMentees()`                                   |
 | `stats`        | `fetchAllStats()`, `fetchLeftPhotos()`, `saveStatsAndPhotos()`         |
 | `subscription` | `fetchActiveSubscription()`                                            |
 | `plan`         | `fetchPlan(planId)`                                                    |
-| `dietPlan`     | `fetchPlanForDate()`, `fetchLogs()`, `toggleConsumed()`, `saveNotes()` |
+| `dietPlan`     | `fetchPlanForDate()`, `fetchLogs()`, `toggleConsumed()`, `saveNotes()`, `fetchMentees()`, `fetchCoachPlans()`, `createPlan()`, `updatePlan()`, `deletePlan()`, `fetchPlanForEdit()` |
 | `foodItem`     | `searchFoods()`, `createCustomFood()`                                  |
 
 ### Commands
@@ -116,7 +116,9 @@ gh release create | list | view
 - `app/utils/foodMacros.ts` — macro calculation logic
 - `app/stores/stats.ts` — transactional logic
 - `app/stores/foodItem.ts` — food search & custom food logic
-- `app/stores/dietPlan.ts` — mentee plan tracking logic
+- `app/stores/dietPlan.ts` — mentee plan tracking logic + coach CRUD actions
+- `app/stores/profile.ts` — coach mentee fetching
+- `app/utils/supabase.ts` — Supabase client creation, auth token handling
 - `app/components/diet-plan/FoodSelector.vue` — autocomplete component
 - `app/components/diet-plan/CustomFoodModal.vue` — custom food modal
 - `app/composables/useFoodCache.ts` — IndexedDB caching
@@ -137,16 +139,16 @@ gh release create | list | view
 | **4. Verify QA**        | Skill: `verify-qa`                                                       |
 | **5. Maintain context** | Skill: `maintain-context`                                                |
 
-## Test User (Local Dev)
+## Test Users (Local Dev)
 
-```
-Email: test@example.com
-Password: testpassword123
-Role: mentee
-```
+| Email              | Password           | Role    |
+| ------------------ | ------------------ | ------- |
+| test@example.com   | testpassword123    | mentee  |
+| coach2@example.com | testpassword123    | coach   |
+| mentee2@example.com| testpassword123    | mentee  |
 
 Run SQL in `ai-workspace/database/migrations.md` after `supabase db reset`.
 
 ## Last Updated
 
-2026-10-31
+2026-11-01
