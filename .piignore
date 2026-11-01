@@ -1,0 +1,40 @@
+# pi ignore file
+# Files and directories pi should not read/edit
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.output/
+dist/
+build/
+
+# Local Supabase
+supabase/.temp/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Test coverage
+coverage/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Generated types (regeneratable)
+app/types/database.ts
